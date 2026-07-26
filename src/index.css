@@ -50,7 +50,16 @@ body {
 #root {
   display: flex;
   height: 100vh;
+}
+
+.titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 28px; /* Standard macOS titlebar height */
   -webkit-app-region: drag;
+  z-index: 9999;
 }
 
 /* Sidebar */

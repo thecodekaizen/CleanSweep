@@ -1,12 +1,8 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
-import path from 'path';
-import fs from 'fs';
-import { promisify } from 'util';
-import os from 'os';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const path = require('path');
+const fs = require('fs');
+const { promisify } = require('util');
+const os = require('os');
 
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
@@ -22,7 +18,7 @@ function createWindow() {
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#ffffff', // Light mode default, CSS handles dark mode
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true
     }
@@ -118,11 +114,12 @@ ipcMain.handle('clean-system', async (event, itemsToClean) => {
       for (const file of files) {
         const fullPath = path.join(item.path, file);
         try {
-          await shell.trashItem(fullPath);
+          // Permanently delete the file/folder to actually free up space
+          await fs.promises.rm(fullPath, { recursive: true, force: true });
           cleanedCount++;
         } catch (e) {
-          // Ignore files that cannot be moved to trash (e.g. permission issues or files in use)
-          console.error(`Failed to trash ${fullPath}:`, e.message);
+          // Ignore files that cannot be deleted (e.g. permission issues or files in use)
+          console.error(`Failed to delete ${fullPath}:`, e.message);
         }
       }
     } catch (e) {
@@ -130,5 +127,5 @@ ipcMain.handle('clean-system', async (event, itemsToClean) => {
     }
   }
   
-  return { success: true, message: `Successfully moved items to Trash.` };
+  return { success: true, message: `Successfully freed up space.` };
 });

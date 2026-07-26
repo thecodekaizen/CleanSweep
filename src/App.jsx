@@ -13,22 +13,14 @@ function App() {
       if (window.electronAPI) {
         const data = await window.electronAPI.scanSystem();
         setScanData(data);
+        setScanStatus('result');
       } else {
-        // Fallback mock data
-        await new Promise(r => setTimeout(r, 1500));
-        setScanData({
-          items: [
-            { id: 'caches', name: 'Application Caches', sizeBytes: 1542100000, sizeFormatted: '1.54 GB', path: '~/Library/Caches' },
-            { id: 'logs', name: 'System Logs', sizeBytes: 210000000, sizeFormatted: '210 MB', path: '~/Library/Logs' },
-            { id: 'trash', name: 'Trash Bin', sizeBytes: 4200000000, sizeFormatted: '4.2 GB', path: '~/.Trash' }
-          ],
-          totalBytes: 5952100000,
-          totalFormatted: '5.95 GB'
-        });
+        alert("Error: Cannot connect to Electron backend. Ensure you are running the app via 'npm run dev', not directly in a browser.");
+        setScanStatus('idle');
       }
-      setScanStatus('result');
     } catch (error) {
       console.error("Scan failed:", error);
+      alert(error.message || "Scan failed.");
       setScanStatus('idle');
     }
   };
@@ -55,6 +47,7 @@ function App() {
 
   return (
     <>
+      <div className="titlebar"></div>
       <div className="sidebar">
         <div className="sidebar-nav">
           <div className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
