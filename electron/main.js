@@ -55,8 +55,12 @@ async function getDirSize(dirPath) {
           size += await getDirSize(fullPath);
         } else {
           const fileStat = await stat(fullPath);
-          size += fileStat.size;
+          // For macOS APFS sparse files (e.g. Docker.raw virtual disk), fileStat.size reports the logical max capacity (e.g. 494 GB),
+          // while fileStat.blocks * 512 reports the true physical disk space allocated on the SSD (e.g. 5.85 GB).
+          const actualSize = fileStat.blocks ? Math.min(fileStat.size, fileStat.blocks * 512) : fileStat.size;
+          size += actualSize;
         }
+
       } catch (err) {
         // Skip inaccessible individual files
       }
