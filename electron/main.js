@@ -107,7 +107,8 @@ ipcMain.handle('scan-system', async () => {
 
 ipcMain.handle('clean-system', async (event, itemsToClean) => {
   let cleanedCount = 0;
-  
+  let skippedCount = 0;
+
   for (const item of itemsToClean) {
     try {
       const files = await readdir(item.path);
@@ -115,17 +116,25 @@ ipcMain.handle('clean-system', async (event, itemsToClean) => {
         const fullPath = path.join(item.path, file);
         try {
           // Permanently delete the file/folder to actually free up space
-          await fs.promises.rm(fullPath, { recursive: true, force: true });
+          await fs.promises.rm(fullPath, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
           cleanedCount++;
         } catch (e) {
-          // Ignore files that cannot be deleted (e.g. permission issues or files in use)
-          console.error(`Failed to delete ${fullPath}:`, e.message);
+          // Ignore files that cannot be deleted (permission issues, protected by SIP, or locked in use by active apps)
+          skippedCount++;
         }
       }
     } catch (e) {
-      console.error(`Failed to read directory ${item.path}:`, e.message);
+      skippedCount++;
     }
   }
-  
-  return { success: true, message: `Successfully freed up space.` };
+
+  console.log(`[Clean Completed] Successfully deleted: ${cleanedCount} item(s) | Skipped (in use or protected): ${skippedCount} item(s)`);
+
+  return {
+    success: true,
+    cleanedCount,
+    skippedCount,
+    message: `Successfully cleaned ${cleanedCount} item(s).`
+  };
 });
+

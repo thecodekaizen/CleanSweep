@@ -6,6 +6,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [scanStatus, setScanStatus] = useState('idle'); // idle, scanning, result, cleaning, done
   const [scanData, setScanData] = useState(null);
+  const [cleanResult, setCleanResult] = useState(null);
 
   const handleScan = async () => {
     setScanStatus('scanning');
@@ -29,9 +30,11 @@ function App() {
     setScanStatus('cleaning');
     try {
       if (window.electronAPI) {
-        await window.electronAPI.cleanSystem(scanData.items);
+        const res = await window.electronAPI.cleanSystem(scanData.items);
+        setCleanResult(res);
       } else {
         await new Promise(r => setTimeout(r, 2000));
+        setCleanResult({ success: true, cleanedCount: 15, skippedCount: 2 });
       }
       setScanStatus('done');
     } catch (error) {
@@ -42,8 +45,10 @@ function App() {
 
   const reset = () => {
     setScanData(null);
+    setCleanResult(null);
     setScanStatus('idle');
   };
+
 
   return (
     <>
@@ -142,11 +147,28 @@ function App() {
               <CheckCircle2 className="empty-state-icon" style={{ color: '#34c759' }} strokeWidth={1.5} />
               <h2>Optimization Complete</h2>
               <p>Successfully recovered <strong>{scanData?.totalFormatted}</strong> of disk space. Your system should be running more efficiently now.</p>
+              {cleanResult?.skippedCount > 0 && (
+                <div style={{
+                  margin: '16px auto',
+                  maxWidth: '520px',
+                  padding: '12px 16px',
+                  background: 'var(--surface-bg-alt)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  color: 'var(--text-secondary)',
+                  textAlign: 'left',
+                  lineHeight: '1.4'
+                }}>
+                  <strong>ℹ️ Note on macOS Protections:</strong> {cleanResult.skippedCount} file(s) or system caches (such as Apple CloudKit, Safari, or active application logs) were skipped. To clean Apple-protected caches and the Trash bin, grant <strong>Full Disk Access</strong> in <em>System Settings &gt; Privacy &amp; Security &gt; Full Disk Access</em>.
+                </div>
+              )}
               <button className="btn" onClick={reset}>
                 Return to Dashboard
               </button>
             </div>
           )}
+
         </div>
       </div>
     </>
