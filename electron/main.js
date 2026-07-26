@@ -49,7 +49,11 @@ async function getDirSize(dirPath) {
   try {
     const files = await readdir(dirPath, { withFileTypes: true });
     for (const file of files) {
+      if (file.isSymbolicLink()) {
+        continue;
+      }
       const fullPath = path.join(dirPath, file.name);
+
       try {
         if (file.isDirectory()) {
           size += await getDirSize(fullPath);
