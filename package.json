@@ -23,6 +23,7 @@
     "electronDist": "node_modules/electron/dist",
     "mac": {
       "category": "public.app-category.utilities",
+      "icon": "build/icon.png",
       "target": [
         "zip",
         "dir"

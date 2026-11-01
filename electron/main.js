@@ -13,6 +13,7 @@ const { getHistory, recordHistoryEntry, clearHistory } = require('./history');
 const { scanInstallers, cleanInstallers } = require('./installer');
 const { getConfig, updateConfig } = require('./config');
 const { getScheduleStatus, configureSchedule } = require('./scheduler');
+const { setupTray, destroyTray } = require('./tray');
 const { safeDelete } = require('./utils');
 
 let mainWindow;
@@ -38,14 +39,33 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
+
+  // PureMac behavior: Hide window instead of quitting when user closes it, staying active in Menu Bar
+  mainWindow.on('close', (event) => {
+    if (!app.isQuitting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
 }
 
 app.whenReady().then(() => {
   createWindow();
+  setupTray(mainWindow);
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    } else {
+      createWindow();
+    }
   });
+});
+
+app.on('before-quit', () => {
+  app.isQuitting = true;
+  destroyTray();
 });
 
 app.on('window-all-closed', () => {

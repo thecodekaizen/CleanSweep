@@ -120,6 +120,18 @@ One-click maintenance routines to speed up and stabilize macOS:
 
 ---
 
+### 12. 🖥️ macOS Menu Bar Tray Companion (PureMac Parity)
+- Lives in the macOS menu bar showing live available memory at a glance.
+- One-click **⚡ Quick Clean (Flush RAM & DNS)** right from the menu bar without keeping the full app open.
+- Background helper stays resident in the menu bar when closing the main window.
+
+### 13. ⏰ Automated Background Schedule (Native macOS LaunchAgent)
+- Set automated background maintenance on your preferred schedule: **Daily** or **Weekly**.
+- Configures a native macOS `LaunchAgent` daemon (`~/Library/LaunchAgents/com.thecodekaizen.cleansweep.autoclean.plist`) that runs silent optimizations.
+- Manage via GUI or terminal: `sweep schedule daily`, `sweep schedule weekly`, or `sweep schedule off`.
+
+---
+
 ## 💻 CLI Companion (`sweep`)
 
 CleanSweep includes a companion command-line interface named `sweep` (inspired by `tw93/mole`'s `mo` and `momenbasel/PureMac`'s `puremac`):
@@ -195,6 +207,12 @@ sudo ln -sf "$(pwd)/bin/sweep.mjs" /usr/local/bin/sweep
 ---
 
 ## 🚀 Installation & Getting Started
+
+### One-Line Quick Install (CLI Companion)
+Install the `sweep` CLI instantly into `/usr/local/bin` with:
+```bash
+curl -fsSL https://raw.githubusercontent.com/thecodekaizen/clean-my-mac/main/install.sh | bash
+```
 
 ### Prerequisites
 - macOS 12 Monterey, macOS 13 Ventura, macOS 14 Sonoma, or macOS 15 Sequoia (Apple Silicon & Intel supported).
