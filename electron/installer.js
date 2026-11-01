@@ -14,13 +14,17 @@ const INSTALLER_EXTENSIONS = new Set([
   '.iso'
 ]);
 
-async function scanInstallers() {
+async function scanInstallers(customDirs = null) {
   const home = os.homedir();
-  const targetDirs = [
+  const defaultDirs = [
     path.join(home, 'Downloads'),
     path.join(home, 'Desktop'),
     path.join(home, 'Documents')
   ];
+
+  const targetDirs = customDirs 
+    ? (Array.isArray(customDirs) ? customDirs : [customDirs]) 
+    : defaultDirs;
 
   const installers = [];
 

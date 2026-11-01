@@ -10,6 +10,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "test": "node --test test/cleansweep.test.js",
     "build": "vite build && electron-builder",
     "build:ui": "vite build",
     "lint": "oxlint",

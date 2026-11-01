@@ -71,14 +71,16 @@ async function scanProjectArtifacts(rootDir, maxDepth = 4, currentDepth = 0) {
 // Scans default dev directories or a user-chosen custom folder
 async function scanDevProjects(customPath = null) {
   const home = os.homedir();
-  const searchDirs = customPath 
-    ? [path.resolve(customPath)] 
-    : [
-        path.join(home, 'Code'),
-        path.join(home, 'Projects'),
-        path.join(home, 'Developer'),
-        path.join(home, 'Documents')
-      ];
+  const searchDirs = Array.isArray(customPath)
+    ? customPath
+    : (customPath
+        ? [path.resolve(customPath)]
+        : [
+            path.join(home, 'Code'),
+            path.join(home, 'Projects'),
+            path.join(home, 'Developer'),
+            path.join(home, 'Documents')
+          ]);
 
   const allArtifacts = [];
 

@@ -3,7 +3,7 @@ const path = require('path');
 const os = require('os');
 const { pathExists } = require('./utils');
 
-const CONFIG_DIR = path.join(os.homedir(), '.config', 'cleansweep');
+const CONFIG_DIR = process.env.CLEANSWEEP_CONFIG_DIR || path.join(os.homedir(), '.config', 'cleansweep');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
 const DEFAULT_CONFIG = {

@@ -69,7 +69,9 @@ async function scanDuplicateFiles(targetDirs = null, minSizeBytes = 10 * 1024) {
     path.join(os.homedir(), 'Desktop')
   ];
 
-  const searchDirs = targetDirs && targetDirs.length > 0 ? targetDirs : defaultDirs;
+  const searchDirs = Array.isArray(targetDirs)
+    ? targetDirs
+    : (targetDirs ? [targetDirs] : defaultDirs);
   const allFiles = [];
 
   for (const d of searchDirs) {
