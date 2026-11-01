@@ -1,0 +1,112 @@
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const { promisify } = require('util');
+const { formatBytes, pathExists, getPathSize, safeDelete } = require('./utils');
+
+const readdir = promisify(fs.readdir);
+
+// Common languages to keep by default
+const DEFAULT_KEEP_LANGUAGES = new Set([
+  'en.lproj',
+  'base.lproj',
+  'english.lproj'
+]);
+
+async function scanSlimmableApps(keepLanguages = DEFAULT_KEEP_LANGUAGES) {
+  const appDirs = ['/Applications', path.join(os.homedir(), 'Applications')];
+  const slimmableApps = [];
+
+  for (const dir of appDirs) {
+    if (!await pathExists(dir)) continue;
+
+    try {
+      const entries = await readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory() || !entry.name.endsWith('.app')) continue;
+
+        const appPath = path.join(dir, entry.name);
+        // Avoid modifying protected Apple system apps in /System or signed by Apple
+        if (appPath.startsWith('/System')) continue;
+
+        const resourcesPath = path.join(appPath, 'Contents', 'Resources');
+        if (!await pathExists(resourcesPath)) continue;
+
+        try {
+          const resEntries = await readdir(resourcesPath, { withFileTypes: true });
+          const unneededLocales = [];
+          let totalSlimBytes = 0;
+
+          for (const res of resEntries) {
+            if (res.isDirectory() && res.name.endsWith('.lproj')) {
+              const lower = res.name.toLowerCase();
+              if (!keepLanguages.has(lower)) {
+                const fullLocalePath = path.join(resourcesPath, res.name);
+                const localeSize = await getPathSize(fullLocalePath);
+                if (localeSize > 0) {
+                  unneededLocales.push({
+                    name: res.name,
+                    path: fullLocalePath,
+                    sizeBytes: localeSize,
+                    sizeFormatted: formatBytes(localeSize)
+                  });
+                  totalSlimBytes += localeSize;
+                }
+              }
+            }
+          }
+
+          if (unneededLocales.length > 0) {
+            slimmableApps.push({
+              appName: entry.name.replace('.app', ''),
+              appPath,
+              localesCount: unneededLocales.length,
+              totalSlimBytes,
+              totalSlimFormatted: formatBytes(totalSlimBytes),
+              locales: unneededLocales
+            });
+          }
+        } catch {
+          // Skip unreadable resources
+        }
+      }
+    } catch {
+      // Skip unreadable app dir
+    }
+  }
+
+  // Sort descending by savings
+  slimmableApps.sort((a, b) => b.totalSlimBytes - a.totalSlimBytes);
+
+  const grandTotal = slimmableApps.reduce((sum, a) => sum + a.totalSlimBytes, 0);
+
+  return {
+    apps: slimmableApps,
+    totalApps: slimmableApps.length,
+    grandTotalBytes: grandTotal,
+    grandTotalFormatted: formatBytes(grandTotal)
+  };
+}
+
+async function slimApp(localePaths, options = { useTrash: true }) {
+  let cleanedCount = 0;
+  let skippedCount = 0;
+
+  for (const p of localePaths) {
+    const res = await safeDelete(p, options.useTrash);
+    if (res.success && !res.skipped) cleanedCount++;
+    else skippedCount++;
+  }
+
+  return {
+    success: true,
+    cleanedCount,
+    skippedCount,
+    message: `Removed ${cleanedCount} unused language localization files.`
+  };
+}
+
+module.exports = {
+  scanSlimmableApps,
+  slimApp
+};
