@@ -39,14 +39,32 @@ const OPTIMIZATION_TASKS = [
     description: 'Fixes corrupted "Open With" app menus, duplicate application entries, and file icons',
     category: 'System',
     action: async () => {
-      const lsregister = '/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister';
-      await execAsync(`"${lsregister}" -kill -r -domain local -domain system -domain user`);
+      const candidatePaths = [
+        '/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister',
+        '/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
+      ];
+
+      const fs = require('fs');
+      let lsregister = candidatePaths.find(p => fs.existsSync(p));
+      if (!lsregister) {
+        throw new Error('macOS lsregister utility not found in system framework directories.');
+      }
+
+      // Safe, non-destructive rebuild: -r recursive scan across user, local and system domains.
+      // -kill was removed in modern macOS because it was dangerous and broke file associations.
+      try {
+        await execAsync(`"${lsregister}" -r -domain local -domain system -domain user`);
+      } catch {
+        // Fallback to targeting Applications directly if domain query fails
+        await execAsync(`"${lsregister}" -r /Applications ~/Applications`);
+      }
+
       try {
         await execAsync('killall Finder');
       } catch {
         // Finder restart optional
       }
-      return 'LaunchServices database rebuilt and Finder restarted.';
+      return 'LaunchServices database successfully rebuilt and Finder refreshed.';
     }
   },
   {
@@ -73,11 +91,10 @@ const OPTIMIZATION_TASKS = [
         }
         let cleaned = 0;
         for (const line of lines) {
-          const parts = line.split('.');
-          const dateStr = parts[parts.length - 1] || parts[parts.length - 2];
-          if (dateStr) {
+          const match = line.match(/com\.apple\.TimeMachine\.(\d{4}-\d{2}-\d{2}-\d{6})/);
+          if (match && match[1]) {
             try {
-              await execAsync(`tmutil deletelocalsnapshots "${dateStr.trim()}"`);
+              await execAsync(`tmutil deletelocalsnapshots "${match[1]}"`);
               cleaned++;
             } catch {
               // May require admin permission

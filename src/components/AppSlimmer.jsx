@@ -24,8 +24,8 @@ export default function AppSlimmer() {
       if (window.cleanSweepAPI?.scanSlimmableApps) {
         const res = await window.cleanSweepAPI.scanSlimmableApps();
         setData(res);
-        // By default select all slimmable apps
-        setSelectedAppPaths(new Set(res.apps.map(a => a.appPath)));
+        // Safe default: leave unchecked so user must explicitly choose which apps to slim
+        setSelectedAppPaths(new Set());
       }
     } catch (err) {
       console.error('Failed to scan slimmable apps:', err);
@@ -120,7 +120,7 @@ export default function AppSlimmer() {
       <div className="filter-controls-bar">
         <div className="flex-row gap-2">
           <span className="text-sm text-secondary">
-            Keeps English &amp; Base locales automatically, removing 50+ unused languages.
+            Keeps English &amp; Base locales automatically. Code-signed apps are automatically re-sealed to preserve macOS Gatekeeper integrity.
           </span>
         </div>
 

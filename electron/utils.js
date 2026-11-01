@@ -1,12 +1,13 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { promisify } = require('util');
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const lstat = promisify(fs.lstat);
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 // Safely obtain Electron modules if running inside Electron runtime
 let electronShell = null;
@@ -17,6 +18,92 @@ try {
   }
 } catch {
   // Running in pure Node CLI context
+}
+
+// Critical system root paths that must NEVER be deleted under any circumstances
+const SYSTEM_PROTECTED_ROOTS = new Set([
+  '/',
+  '/bin',
+  '/sbin',
+  '/usr',
+  '/usr/bin',
+  '/usr/sbin',
+  '/usr/lib',
+  '/usr/local',
+  '/System',
+  '/System/Applications',
+  '/System/Library',
+  '/Library',
+  '/Applications',
+  '/Applications/Utilities',
+  '/Users',
+  '/var',
+  '/etc',
+  '/private',
+  '/private/var',
+  '/private/etc',
+  '/Volumes',
+  '/opt',
+  '/dev'
+]);
+
+// Checks if a target path is protected by macOS system rules or user whitelist
+async function isProtectedPath(targetPath) {
+  if (!targetPath || typeof targetPath !== 'string') return true;
+
+  const resolved = path.resolve(targetPath);
+  const home = os.homedir();
+
+  // 1. Root or exact critical system directories
+  if (SYSTEM_PROTECTED_ROOTS.has(resolved)) return true;
+
+  // 2. Anything within /System directory hierarchy
+  if (resolved.startsWith('/System/') || resolved === '/System') return true;
+
+  // 3. User home directory itself
+  if (resolved === home) return true;
+
+  // 4. Primary user top-level library and desktop folders
+  const userPrimaryDirs = [
+    path.join(home, 'Desktop'),
+    path.join(home, 'Documents'),
+    path.join(home, 'Downloads'),
+    path.join(home, 'Library'),
+    path.join(home, 'Movies'),
+    path.join(home, 'Music'),
+    path.join(home, 'Pictures')
+  ];
+  if (userPrimaryDirs.includes(resolved)) return true;
+
+  // 5. Critical system infrastructure inside user Library
+  const criticalSubdirs = [
+    path.join(home, 'Library', 'Keychains'),
+    path.join(home, 'Library', 'Accounts'),
+    path.join(home, 'Library', 'Mobile Documents'),
+    path.join(home, 'Library', 'CloudStorage'),
+    path.join(home, 'Library', 'IdentityServices'),
+    path.join(home, 'Library', 'Preferences'),
+    path.join(home, 'Library', 'Application Support')
+  ];
+  if (criticalSubdirs.includes(resolved)) return true;
+
+  // 6. Sub-paths of cloud storage or keychains
+  if (resolved.startsWith(path.join(home, 'Library', 'Mobile Documents') + path.sep)) return true;
+  if (resolved.startsWith(path.join(home, 'Library', 'CloudStorage') + path.sep)) return true;
+  if (resolved.startsWith(path.join(home, 'Library', 'Keychains') + path.sep)) return true;
+
+  // 7. Check user-configured whitelist in config.json
+  try {
+    const { isPathWhitelisted } = require('./config');
+    if (typeof isPathWhitelisted === 'function') {
+      const whitelisted = await isPathWhitelisted(resolved);
+      if (whitelisted) return true;
+    }
+  } catch {
+    // Config not loaded or circular require safely ignored
+  }
+
+  return false;
 }
 
 function formatBytes(bytes, decimals = 2) {
@@ -81,8 +168,22 @@ async function getPathSize(itemPath) {
   }
 }
 
-// Delete item safely (Trash by default, or permanent rm if specified)
+// Delete item safely (Trash by default, or permanent rm if specified), protected against system paths and whitelisted items
 async function safeDelete(targetPath, useTrash = true) {
+  if (!targetPath || typeof targetPath !== 'string') {
+    return { success: false, skipped: true, error: 'Invalid target path' };
+  }
+
+  // Safety Shield: Block any deletion targeting system roots, user home, or whitelisted directories
+  if (await isProtectedPath(targetPath)) {
+    return {
+      success: false,
+      skipped: true,
+      protected: true,
+      error: `Deletion blocked: '${targetPath}' is protected by macOS safety policy or user whitelist.`
+    };
+  }
+
   if (!await pathExists(targetPath)) return { success: true, skipped: true };
 
   if (useTrash) {
@@ -91,14 +192,14 @@ async function safeDelete(targetPath, useTrash = true) {
         await electronShell.trashItem(targetPath);
         return { success: true, method: 'trash' };
       } catch {
-        // Fallback to AppleScript or rm
+        // Fallback to native AppleScript
       }
     }
 
-    // CLI AppleScript native trash fallback
+    // CLI AppleScript native trash fallback without shell injection
     try {
-      const escaped = targetPath.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-      await execAsync(`osascript -e 'tell application "Finder" to delete POSIX file "${escaped}"'`);
+      const appleScript = `tell application "Finder" to delete POSIX file "${targetPath.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+      await execFileAsync('osascript', ['-e', appleScript]);
       return { success: true, method: 'trash' };
     } catch {
       // If AppleScript fails, fallback to rm
@@ -124,5 +225,6 @@ module.exports = {
   pathExists,
   getDirSize,
   getPathSize,
+  isProtectedPath,
   safeDelete
 };

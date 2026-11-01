@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { promisify } = require('util');
-const { formatBytes, pathExists, getDirSize, safeDelete } = require('./utils');
+const { formatBytes, pathExists, getDirSize, safeDelete, isProtectedPath } = require('./utils');
 
 const readdir = promisify(fs.readdir);
 
@@ -21,9 +21,34 @@ const PURGE_TARGET_NAMES = new Set([
   '.dart_tool'
 ]);
 
+// Verify whether an artifact directory is genuinely disposable and belongs to a verified code project
+async function isGenuineProjectArtifact(rootDir, artifactName, fullPath) {
+  if (artifactName === 'target') {
+    // Only purge 'target' if accompanied by a Rust, Maven, or Gradle project file
+    return (
+      (await pathExists(path.join(rootDir, 'Cargo.toml'))) ||
+      (await pathExists(path.join(rootDir, 'pom.xml'))) ||
+      (await pathExists(path.join(rootDir, 'build.gradle'))) ||
+      (await pathExists(path.join(rootDir, 'build.gradle.kts')))
+    );
+  }
+
+  if (artifactName === 'venv' || artifactName === '.venv') {
+    // Must contain standard Python virtualenv markers
+    return (
+      (await pathExists(path.join(fullPath, 'pyvenv.cfg'))) ||
+      (await pathExists(path.join(fullPath, 'bin', 'activate')))
+    );
+  }
+
+  return true;
+}
+
 // Find rebuildable artifacts in a given root directory
 async function scanProjectArtifacts(rootDir, maxDepth = 4, currentDepth = 0) {
   if (currentDepth > maxDepth) return [];
+  if (await isProtectedPath(rootDir)) return [];
+
   const artifacts = [];
 
   try {
@@ -35,6 +60,12 @@ async function scanProjectArtifacts(rootDir, maxDepth = 4, currentDepth = 0) {
 
       if (entry.isDirectory()) {
         if (PURGE_TARGET_NAMES.has(entry.name)) {
+          // Safety check: verify that generic directory names are actually project artifacts
+          const isGenuine = await isGenuineProjectArtifact(rootDir, entry.name, fullPath);
+          if (!isGenuine) {
+            continue;
+          }
+
           // Found a rebuildable artifact directory!
           const sizeBytes = await getDirSize(fullPath);
           if (sizeBytes > 0) {
@@ -78,14 +109,13 @@ async function scanDevProjects(customPath = null) {
         : [
             path.join(home, 'Code'),
             path.join(home, 'Projects'),
-            path.join(home, 'Developer'),
-            path.join(home, 'Documents')
+            path.join(home, 'Developer')
           ]);
 
   const allArtifacts = [];
 
   for (const dir of searchDirs) {
-    if (await pathExists(dir)) {
+    if (await pathExists(dir) && !(await isProtectedPath(dir))) {
       const found = await scanProjectArtifacts(dir, 4);
       allArtifacts.push(...found);
     }

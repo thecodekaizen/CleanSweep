@@ -65,7 +65,7 @@ sweep
 
 ### Desktop Application
 
-Download the precompiled `CleanSweep-1.0.0-arm64-mac.zip` from [GitHub Releases](https://github.com/thecodekaizen/CleanSweep/releases), unpack it, and drag `CleanSweep.app` into `/Applications`.
+Download the precompiled `CleanSweep-1.1.0-arm64-mac.zip` from [GitHub Releases](https://github.com/thecodekaizen/CleanSweep/releases), unpack it, and drag `CleanSweep.app` into `/Applications`.
 
 ---
 

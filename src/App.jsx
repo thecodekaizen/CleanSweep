@@ -247,7 +247,7 @@ export default function App() {
             <ShieldCheck size={14} className="text-success" />
             <span>Zero Telemetry</span>
           </div>
-          <span className="version-caption">v1.0.0 Production</span>
+          <span className="version-caption">v1.1.0 Production</span>
         </div>
       </aside>
 

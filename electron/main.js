@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const { scanSystem, cleanSystem } = require('./scanner');
 const { scanInstalledApps, scanOrphanFiles, uninstallApp } = require('./uninstaller');
@@ -15,6 +15,7 @@ const { getConfig, updateConfig } = require('./config');
 const { getScheduleStatus, configureSchedule } = require('./scheduler');
 const { setupTray, destroyTray } = require('./tray');
 const { safeDelete } = require('./utils');
+const { runDamageScan } = require('./damageScanner');
 
 let mainWindow;
 
@@ -166,6 +167,11 @@ ipcMain.handle('run-optimization', async (event, taskId) => {
   return await runOptimization(taskId);
 });
 
+// 5b. System Safety & Damage Scanner
+ipcMain.handle('run-damage-scan', async () => {
+  return await runDamageScan();
+});
+
 // 6. Startup Items Manager
 ipcMain.handle('get-startup-items', async () => {
   return await getStartupItems();
@@ -265,7 +271,17 @@ ipcMain.handle('configure-schedule', async (event, frequency) => {
   return await configureSchedule(frequency);
 });
 
-// 13. System Utilities (Finder, URLs)
+// 13. System Utilities (Finder, URLs, Dialogs)
+ipcMain.handle('select-directory', async () => {
+  if (!mainWindow) return null;
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select Directory to Scan for Large & Old Files',
+    properties: ['openDirectory']
+  });
+  if (result.canceled || !result.filePaths || result.filePaths.length === 0) return null;
+  return result.filePaths[0];
+});
+
 ipcMain.handle('reveal-in-finder', async (event, targetPath) => {
   shell.showItemInFolder(targetPath);
   return { success: true };

@@ -25,6 +25,7 @@ const api = {
   // 5. System Optimization & Maintenance
   getOptimizationTasks: () => ipcRenderer.invoke('get-optimization-tasks'),
   runOptimization: (taskId) => ipcRenderer.invoke('run-optimization', taskId),
+  runDamageScan: () => ipcRenderer.invoke('run-damage-scan'),
 
   // 6. Startup Items
   getStartupItems: () => ipcRenderer.invoke('get-startup-items'),
@@ -62,6 +63,7 @@ const api = {
   configureSchedule: (frequency) => ipcRenderer.invoke('configure-schedule', frequency),
 
   // 13. Utilities
+  selectDirectory: () => ipcRenderer.invoke('select-directory'),
   revealInFinder: (targetPath) => ipcRenderer.invoke('reveal-in-finder', targetPath),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
 

@@ -1,6 +1,6 @@
 {
   "name": "cleansweep",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Fast, zero-telemetry macOS optimizer, app uninstaller, and disk cleaning suite with CLI companion.",
   "author": "CleanSweep Contributors",
   "license": "MIT",
@@ -12,6 +12,7 @@
     "dev": "vite",
     "test": "node --test test/cleansweep.test.js",
     "build": "vite build && electron-builder",
+    "build:local": "vite build && electron-builder --config.electronDist=node_modules/electron/dist",
     "build:ui": "vite build",
     "lint": "oxlint",
     "cli": "node bin/sweep.mjs",

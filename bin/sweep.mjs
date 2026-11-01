@@ -40,7 +40,7 @@ const c = {
 };
 
 function printBanner() {
-  console.log(`\n${c.bold}CleanSweep${c.reset} ${c.dim}1.0.0 — macOS disk cleaner & optimizer${c.reset}\n`);
+  console.log(`\n${c.bold}CleanSweep${c.reset} ${c.dim}1.1.0 — macOS disk cleaner & optimizer${c.reset}\n`);
 }
 
 function printHelp() {
@@ -56,6 +56,7 @@ function printHelp() {
   console.log(`  ${c.green}uninstall <name>${c.reset}    Completely uninstall an application and its leftover files`);
   console.log(`  ${c.green}analyze [dir]${c.reset}      Find large and old files taking up space`);
   console.log(`  ${c.green}optimize${c.reset}           Run macOS maintenance tasks (Flush DNS, purge RAM, rebuild services)`);
+  console.log(`  ${c.green}audit${c.reset}              Run system damage scanner & safety shield verification`);
   console.log(`  ${c.green}slim${c.reset}               Remove foreign language packs from installed applications`);
   console.log(`  ${c.green}installer${c.reset}          Find and remove leftover installer packages (.dmg / .pkg)`);
   console.log(`  ${c.green}history${c.reset}            Display lifetime reclaimed storage history and audit log`);
@@ -294,16 +295,29 @@ async function handleUninstall() {
 }
 
 async function handleAnalyze() {
-  const customDir = args[1];
+  const customDir = args[1] && !args[1].startsWith('--') ? args[1] : null;
   const jsonMode = args.includes('--json');
+  
+  // Parse optional --min-size flag (e.g. --min-size=25 or --min-size 25)
+  let minMb = 50;
+  const minSizeFlagIdx = args.findIndex(a => a === '--min-size' || a.startsWith('--min-size='));
+  if (minSizeFlagIdx !== -1) {
+    const val = args[minSizeFlagIdx].includes('=') 
+      ? args[minSizeFlagIdx].split('=')[1] 
+      : args[minSizeFlagIdx + 1];
+    if (val && !isNaN(parseInt(val, 10))) {
+      minMb = parseInt(val, 10);
+    }
+  }
 
   if (!jsonMode) {
     printBanner();
-    process.stdout.write(`${c.dim}Analyzing directories for large files...${c.reset}\r`);
+    process.stdout.write(`${c.dim}Analyzing directories for large files (>${minMb}MB)...${c.reset}\r`);
   }
 
   const result = await scanLargeAndOldFiles({
-    customDirs: customDir ? [path.resolve(customDir)] : undefined
+    customDirs: customDir ? [path.resolve(customDir)] : undefined,
+    minSizeBytes: minMb * 1024 * 1024
   });
 
   if (jsonMode) {
@@ -311,11 +325,21 @@ async function handleAnalyze() {
     return;
   }
 
-  console.log(`\r${c.bold}Large Files Detected (>50MB):${c.reset} ${c.yellow}${result.totalFormatted}${c.reset} in ${result.totalCount} files\n`);
+  console.log(`\r${c.bold}Large Files Detected (>${minMb}MB):${c.reset} ${c.yellow}${result.totalFormatted}${c.reset} in ${result.totalCount} files\n`);
 
-  result.files.slice(0, 25).forEach(f => {
-    console.log(`  ${c.cyan}•${c.reset} ${f.name.padEnd(36)} ${c.bold}${f.sizeFormatted.padEnd(10)}${c.reset} ${c.dim}[${f.category}, ${f.ageDays}d old]${c.reset}`);
+  if (result.permissionDeniedDirs && result.permissionDeniedDirs.length > 0 && !customDir) {
+    console.log(`  ${c.yellow}Notice: ${result.permissionDeniedDirs.length} system directories require macOS permission. Specify a folder directly: 'sweep analyze <dir>'${c.reset}\n`);
+  }
+
+  result.files.slice(0, 30).forEach(f => {
+    console.log(`  ${c.cyan}•${c.reset} ${f.name.padEnd(36)} ${c.bold}${f.sizeFormatted.padEnd(10)}${c.reset} ${c.dim}[${f.category}, ${f.ageDays}d old] ${sanitizePath(f.path)}${c.reset}`);
   });
+
+  if (result.files.length === 0) {
+    console.log(`  ${c.dim}No files found matching criteria (>${minMb}MB). Try 'sweep analyze --min-size 10' or pass a specific folder.${c.reset}`);
+  } else if (result.files.length > 30) {
+    console.log(`  ${c.dim}...and ${result.files.length - 30} more files.${c.reset}`);
+  }
 
   console.log('');
 }
@@ -462,6 +486,36 @@ async function handleOptimize() {
   console.log(`\n${c.bold}${c.green}✓ System maintenance routines completed!${c.reset}\n`);
 }
 
+async function handleDamageScan() {
+  const jsonMode = args.includes('--json');
+  if (!jsonMode) {
+    printBanner();
+    process.stdout.write(`${c.dim}Scanning system commands, path protections, and safety shields...${c.reset}\r`);
+  }
+
+  const { runDamageScan } = require('../electron/damageScanner.js');
+  const report = await runDamageScan();
+
+  if (jsonMode) {
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+
+  const statusColor = report.overallStatus === 'SECURE' ? c.green : (report.overallStatus === 'CRITICAL' ? c.red : c.yellow);
+  console.log(`\r${c.bold}System Damage & Safety Audit:${c.reset} ${statusColor}${c.bold}${report.overallStatus}${c.reset} (Safety Score: ${c.bold}${report.safetyScore}%${c.reset})\n`);
+
+  report.checks.forEach(check => {
+    const icon = check.status === 'PASS' ? `${c.green}✓${c.reset}` : (check.status === 'WARN' ? `${c.yellow}⚠${c.reset}` : `${c.red}✖${c.reset}`);
+    console.log(`  ${icon} ${c.bold}${check.title.padEnd(42)}${c.reset}`);
+    console.log(`    ${c.dim}${check.message}${c.reset}`);
+    if (check.details) {
+      console.log(`    ${c.dim}[Info: ${check.details}]${c.reset}`);
+    }
+  });
+
+  console.log(`\n${c.bold}${c.green}✓ Damage scanner completed in ${report.durationMs}ms.${c.reset} ${report.checksPassed}/${report.totalChecks} safety checks verified.\n`);
+}
+
 async function handleInteractiveMenu() {
   printBanner();
   console.log(`${c.bold}Operations:${c.reset}\n`);
@@ -474,6 +528,7 @@ async function handleInteractiveMenu() {
   console.log(`  ${c.bold}7${c.reset}  ${'Maintenance'.padEnd(20)} ${c.dim}Flush DNS, purge RAM, rebuild services${c.reset}`);
   console.log(`  ${c.bold}8${c.reset}  ${'System Status'.padEnd(20)} ${c.dim}Hardware telemetry, RAM, and disk metrics${c.reset}`);
   console.log(`  ${c.bold}9${c.reset}  ${'Large Files'.padEnd(20)} ${c.dim}Find large and old files taking up space${c.reset}`);
+  console.log(`  ${c.bold}d${c.reset}  ${'Damage Scanner'.padEnd(20)} ${c.dim}Verify system integrity, safety shields, and tooling${c.reset}`);
   console.log(`  ${c.bold}h${c.reset}  ${'History'.padEnd(20)} ${c.dim}Lifetime reclaimed space and operation logs${c.reset}`);
   console.log(`  ${c.bold}s${c.reset}  ${'Schedule'.padEnd(20)} ${c.dim}Manage background LaunchAgent auto-clean daemon${c.reset}`);
   console.log(`  ${c.bold}u${c.reset}  ${'Update'.padEnd(20)} ${c.dim}Check for latest CleanSweep updates${c.reset}`);
@@ -497,6 +552,7 @@ async function handleInteractiveMenu() {
       case '7': await handleOptimize(); break;
       case '8': await handleStatus(); break;
       case '9': await handleAnalyze(); break;
+      case 'd': case 'D': await handleDamageScan(); break;
       case 'h': case 'H': await handleHistory(); break;
       case 's': case 'S': await handleSchedule(); break;
       case 'u': case 'U': await handleUpdate(); break;
@@ -576,7 +632,7 @@ async function handleSchedule() {
 
 async function main() {
   if (args.includes('--version') || args.includes('-v')) {
-    console.log('CleanSweep CLI v1.0.0');
+    console.log('CleanSweep CLI v1.1.0');
     return;
   }
 
@@ -619,6 +675,11 @@ async function main() {
       break;
     case 'optimize':
       await handleOptimize();
+      break;
+    case 'audit':
+    case 'damage-scan':
+    case 'damage':
+      await handleDamageScan();
       break;
     case 'menu':
       await handleInteractiveMenu();

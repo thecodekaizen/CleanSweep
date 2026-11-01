@@ -66,7 +66,43 @@ async function getStartupItems() {
 }
 
 async function removeStartupItem(itemPath, useTrash = true) {
-  return await safeDelete(itemPath, useTrash);
+  if (!itemPath || typeof itemPath !== 'string') {
+    return { success: false, error: 'Invalid startup item path' };
+  }
+
+  const resolved = path.resolve(itemPath);
+  const home = os.homedir();
+  const allowedDirs = [
+    path.join(home, 'Library', 'LaunchAgents'),
+    '/Library/LaunchAgents',
+    '/Library/LaunchDaemons'
+  ];
+
+  // 1. Must be a .plist file
+  if (!resolved.endsWith('.plist')) {
+    return { success: false, error: 'Target is not a valid launchd .plist configuration.' };
+  }
+
+  // 2. Must be located inside one of the recognized launchd directories
+  const isInsideAllowed = allowedDirs.some(d => resolved.startsWith(d + path.sep));
+  if (!isInsideAllowed) {
+    return { success: false, error: 'Target path is outside allowed LaunchAgent/LaunchDaemon directories.' };
+  }
+
+  // 3. Protect Apple system daemons
+  const baseName = path.basename(resolved).toLowerCase();
+  if (baseName.startsWith('com.apple.')) {
+    return { success: false, error: 'Cannot remove protected macOS system LaunchAgent/LaunchDaemon.' };
+  }
+
+  // 4. Safely unload service from launchd before deleting plist
+  try {
+    await execFileAsync('launchctl', ['unload', resolved]);
+  } catch {
+    // Ignore unload error if service is not currently active
+  }
+
+  return await safeDelete(resolved, useTrash);
 }
 
 module.exports = {

@@ -10,16 +10,17 @@ const testAgentsDir = path.join(os.tmpdir(), `cleansweep-agents-test-${Date.now(
 process.env.CLEANSWEEP_CONFIG_DIR = testConfigDir;
 process.env.CLEANSWEEP_AGENTS_DIR = testAgentsDir;
 
-const { formatBytes, pathExists } = require('../electron/utils');
+const { formatBytes, pathExists, isProtectedPath, safeDelete } = require('../electron/utils');
 const { getConfig, updateConfig, isPathWhitelisted } = require('../electron/config');
 const { getHistory, recordHistoryEntry } = require('../electron/history');
-const { getOptimizationTasks } = require('../electron/optimizer');
+const { getOptimizationTasks, runOptimization } = require('../electron/optimizer');
 const { getTargets, cleanSystem } = require('../electron/scanner');
 const { scanDuplicateFiles, removeDuplicates } = require('../electron/duplicates');
 const { scanDevProjects, purgeArtifacts } = require('../electron/purger');
 const { scanInstallers, cleanInstallers } = require('../electron/installer');
 const { scanLargeAndOldFiles } = require('../electron/analyzer');
 const { getScheduleStatus, configureSchedule } = require('../electron/scheduler');
+const { runDamageScan } = require('../electron/damageScanner');
 
 test('utils: formatBytes handles various byte ranges', () => {
   assert.equal(formatBytes(0), '0 B');
@@ -188,6 +189,27 @@ test('analyzer: scans and identifies large and old files', async () => {
   }
 });
 
+test('analyzer: detects .app directory packages and computes real bundle size', async () => {
+  const tmpAnalyzerDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'cleansweep-analyzer-pkg-'));
+
+  try {
+    const appBundle = path.join(tmpAnalyzerDir, 'SampleTest.app');
+    const appContents = path.join(appBundle, 'Contents', 'MacOS');
+    await fs.promises.mkdir(appContents, { recursive: true });
+    // Write 60KB binary inside bundle
+    const binFile = path.join(appContents, 'SampleBinary');
+    await fs.promises.writeFile(binFile, Buffer.alloc(60 * 1024, 'B'));
+
+    const result = await scanLargeAndOldFiles({ customDirs: [tmpAnalyzerDir], minSizeBytes: 50 * 1024 });
+    assert.equal(result.files.length, 1);
+    assert.equal(result.files[0].name, 'SampleTest.app');
+    assert.equal(result.files[0].category, 'App Packages');
+    assert.ok(result.files[0].sizeBytes >= 60 * 1024);
+  } finally {
+    await fs.promises.rm(tmpAnalyzerDir, { recursive: true, force: true });
+  }
+});
+
 test('history: logs operations and calculates cumulative statistics', async () => {
   const initialHistory = await getHistory();
   const initialReclaimed = initialHistory.totalLifetimeBytes;
@@ -224,4 +246,88 @@ test('scheduler: configures and removes native macOS LaunchAgent daemon', async 
   assert.ok(offRes.success);
   assert.equal(offRes.enabled, false);
   assert.equal(await pathExists(dailyRes.plistPath), false);
+});
+
+test('safety: isProtectedPath protects critical system, user, and whitelisted directories', async () => {
+  const home = os.homedir();
+  assert.equal(await isProtectedPath('/'), true);
+  assert.equal(await isProtectedPath('/System'), true);
+  assert.equal(await isProtectedPath('/System/Applications'), true);
+  assert.equal(await isProtectedPath('/Library'), true);
+  assert.equal(await isProtectedPath(home), true);
+  assert.equal(await isProtectedPath(path.join(home, 'Documents')), true);
+  assert.equal(await isProtectedPath(path.join(home, 'Desktop')), true);
+  assert.equal(await isProtectedPath(path.join(home, 'Library', 'Keychains', 'login.keychain')), true);
+  assert.equal(await isProtectedPath(path.join(home, 'Library', 'Mobile Documents', 'com~apple~CloudDocs')), true);
+});
+
+test('safety: safeDelete blocks deletions targeting protected paths and whitelisted folders', async () => {
+  const home = os.homedir();
+  const rootRes = await safeDelete('/', false);
+  assert.equal(rootRes.success, false);
+  assert.equal(rootRes.protected, true);
+
+  const homeRes = await safeDelete(home, false);
+  assert.equal(homeRes.success, false);
+  assert.equal(homeRes.protected, true);
+
+  // Whitelisted path
+  await updateConfig({ whitelist: ['/tmp/cleansweep-whitelisted-dir'] });
+  const whiteRes = await safeDelete('/tmp/cleansweep-whitelisted-dir/file.txt', false);
+  assert.equal(whiteRes.success, false);
+  assert.equal(whiteRes.protected, true);
+});
+
+test('safety: rebuild-launchservices executes modern safe syntax without -kill', async () => {
+  const result = await runOptimization('rebuild-launchservices');
+  assert.equal(result.success, true);
+  assert.ok(result.message.includes('successfully rebuilt'));
+});
+
+test('safety: duplicates pass 3 separates files with matching 64KB headers but different tails', async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'cleansweep-dup-pass3-'));
+
+  try {
+    const fileA = path.join(tmpDir, 'fileA.bin');
+    const fileB = path.join(tmpDir, 'fileB.bin');
+
+    // Both files are 70KB with identical first 64KB, but differing last 6KB
+    const sharedHeader = Buffer.alloc(64 * 1024, 'X');
+    const tailA = Buffer.alloc(6 * 1024, 'A');
+    const tailB = Buffer.alloc(6 * 1024, 'B');
+
+    await fs.promises.writeFile(fileA, Buffer.concat([sharedHeader, tailA]));
+    await fs.promises.writeFile(fileB, Buffer.concat([sharedHeader, tailB]));
+
+    const dupReport = await scanDuplicateFiles(tmpDir, 1024);
+    // Must NOT be detected as duplicates because full hash differs
+    assert.equal(dupReport.groups.length, 0);
+    assert.equal(dupReport.totalDuplicates, 0);
+  } finally {
+    await fs.promises.rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('safety: purger ignores generic directories named target without project descriptor', async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'cleansweep-purger-safety-'));
+
+  try {
+    const fakeTargetDir = path.join(tmpDir, 'target');
+    await fs.promises.mkdir(fakeTargetDir, { recursive: true });
+    await fs.promises.writeFile(path.join(fakeTargetDir, 'important-user-doc.pdf'), 'User content', 'utf8');
+
+    // Without Cargo.toml, pom.xml, or build.gradle, 'target' MUST NOT be purged
+    const result = await scanDevProjects(tmpDir);
+    assert.equal(result.artifacts.length, 0);
+  } finally {
+    await fs.promises.rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('safety: damageScanner verifies 100% of safety shields', async () => {
+  const scan = await runDamageScan();
+  assert.equal(scan.overallStatus, 'SECURE');
+  assert.equal(scan.safetyScore, 100);
+  assert.equal(scan.checksFailed, 0);
+  assert.ok(scan.checksPassed >= 8);
 });

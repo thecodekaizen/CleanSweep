@@ -72,9 +72,17 @@ async function findAssociatedFiles(appName, bundleId) {
   ];
 
   const matchedFiles = [];
-  const queryStrings = new Set();
-  if (bundleId) queryStrings.add(bundleId.toLowerCase());
-  if (appName && appName.length > 2) queryStrings.add(appName.toLowerCase());
+  const bId = (bundleId || '').toLowerCase().trim();
+  const name = (appName || '').toLowerCase().trim();
+
+  // Words that are too generic or dangerous to match loosely
+  const GENERIC_EXCLUSIONS = new Set([
+    'app', 'mac', 'code', 'mail', 'drive', 'cloud', 'clean', 'system',
+    'apple', 'finder', 'safari', 'notes', 'music', 'books', 'photos',
+    'messages', 'maps', 'preview', 'home', 'news', 'stocks', 'tv',
+    'podcasts', 'shortcuts', 'sync', 'backup', 'target', 'test', 'help',
+    'data', 'file', 'link', 'tool', 'util', 'core', 'base', 'view', 'box'
+  ]);
 
   for (const loc of searchLocations) {
     if (!await pathExists(loc.dir)) continue;
@@ -82,15 +90,27 @@ async function findAssociatedFiles(appName, bundleId) {
     try {
       const entries = await readdir(loc.dir);
       for (const entry of entries) {
-        const lowerEntry = entry.toLowerCase();
+        const lower = entry.toLowerCase();
+
+        // Never match system or cloud roots
+        if (lower.startsWith('com.apple.') || lower === 'cloudstorage' || lower === 'mobile documents' || lower === 'keychains') {
+          continue;
+        }
+
         let matched = false;
 
-        for (const q of queryStrings) {
-          if (lowerEntry === q || lowerEntry === `${q}.plist` || lowerEntry === `${q}.savedstate` || lowerEntry.includes(q)) {
-            // Avoid matching common short substrings or system prefixes
-            if (q.length < 4 && !lowerEntry.startsWith(q)) continue;
+        // 1. Exact bundle ID match or standard reverse-DNS prefix (e.g. "com.spotify.client" or "com.spotify.client.plist")
+        if (bId && bId.length > 3) {
+          if (lower === bId || lower === `${bId}.plist` || lower === `${bId}.savedstate` || lower.startsWith(`${bId}.`)) {
             matched = true;
-            break;
+          }
+        }
+
+        // 2. Strict app name matching (exact or with standard delimiter: '.', '-', '_', ' ')
+        if (!matched && name && name.length >= 3 && !GENERIC_EXCLUSIONS.has(name)) {
+          if (lower === name || lower === `${name}.plist` || lower === `${name}.savedstate` ||
+              lower.startsWith(`${name}.`) || lower.startsWith(`${name}-`) || lower.startsWith(`${name}_`) || lower.startsWith(`${name} `)) {
+            matched = true;
           }
         }
 
@@ -208,7 +228,12 @@ async function scanOrphanFiles() {
   const orphans = [];
   const systemIgnoreList = new Set([
     'com.apple', 'apple', 'icloud', 'finder', 'dock', 'safari', 'system',
-    'quicklook', 'spotlight', 'siri', 'addressbook', 'messages', 'photos'
+    'quicklook', 'spotlight', 'siri', 'addressbook', 'messages', 'photos',
+    'audiounits', 'bluetooth', 'clouddocs', 'fileprovider', 'knowledge',
+    'trial', 'personalizationportrait', 'accounts', 'syncservices', 'homebrew',
+    'docker', 'git', 'cursor', 'code', 'pnpm', 'npm', 'yarn', 'pip',
+    'python', 'cargo', 'rust', 'ollama', 'cleansweep', 'identityservices',
+    'keychains', 'cloudstorage', 'mobiledocuments', 'crashreporter'
   ]);
 
   for (const loc of searchLocations) {
@@ -222,7 +247,7 @@ async function scanOrphanFiles() {
         // Skip Apple system entries and default OS directories
         let isSystem = false;
         for (const sys of systemIgnoreList) {
-          if (lower.startsWith(sys)) {
+          if (lower === sys || lower.startsWith(sys)) {
             isSystem = true;
             break;
           }
@@ -251,6 +276,10 @@ async function scanOrphanFiles() {
 
         if (!isKnown) {
           const fullPath = path.join(loc.dir, entry);
+          // Protect from reporting any protected system path
+          const { isProtectedPath } = require('./utils');
+          if (await isProtectedPath(fullPath)) continue;
+
           const sizeBytes = await getPathSize(fullPath);
           if (sizeBytes > 1024) { // Only show orphans with at least 1KB
             orphans.push({
@@ -283,6 +312,18 @@ async function scanOrphanFiles() {
 
 // Cleanly uninstall an app and remove its associated files
 async function uninstallApp(appPath, associatedPaths = [], options = { useTrash: true }) {
+  if (!appPath || typeof appPath !== 'string') {
+    return { success: false, error: 'Invalid application path provided.' };
+  }
+
+  // Safety Shield: Block uninstalling protected Apple and macOS system applications
+  if (appPath.startsWith('/System') || appPath.startsWith('/System/Applications') || (appPath.includes('/Applications/Utilities') && !appPath.startsWith(os.homedir()))) {
+    return {
+      success: false,
+      error: `Cannot uninstall protected macOS system application '${appPath}'.`
+    };
+  }
+
   let cleanedCount = 0;
   let skippedCount = 0;
 

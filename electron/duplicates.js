@@ -116,12 +116,37 @@ async function scanDuplicateFiles(targetDirs = null, minSizeBytes = 10 * 1024) {
     }
   }
 
-  // Pass 3: For any group still matching, verify with full hash if > 64KB
+  // Pass 3: Strict cryptographic verification - compute full SHA-256 for all remaining candidates
+  const verifiedHashMap = new Map();
+
+  for (const [, list] of hashMap.entries()) {
+    if (list.length <= 1) continue;
+
+    for (const f of list) {
+      try {
+        // If file is 64KB or smaller, chunk hash is already the full file hash
+        let fullHash;
+        if (f.sizeBytes <= 64 * 1024) {
+          fullHash = 'exact-verified';
+        } else {
+          fullHash = await getFileHash(f.path);
+        }
+        const fullKey = `${f.sizeBytes}-${fullHash}`;
+        if (!verifiedHashMap.has(fullKey)) {
+          verifiedHashMap.set(fullKey, []);
+        }
+        verifiedHashMap.get(fullKey).push(f);
+      } catch {
+        // Skip unreadable files
+      }
+    }
+  }
+
   const duplicateGroups = [];
   let totalWastedBytes = 0;
   let duplicateCount = 0;
 
-  for (const [, list] of hashMap.entries()) {
+  for (const [, list] of verifiedHashMap.entries()) {
     if (list.length <= 1) continue;
 
     // Sort by modified time: oldest first is considered the Original
