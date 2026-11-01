@@ -4,9 +4,11 @@ const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
 
-// Point config and history to an isolated temporary sandbox directory for test run
+// Point config, history and agents to an isolated temporary sandbox directory for test run
 const testConfigDir = path.join(os.tmpdir(), `cleansweep-unit-test-${Date.now()}`);
+const testAgentsDir = path.join(os.tmpdir(), `cleansweep-agents-test-${Date.now()}`);
 process.env.CLEANSWEEP_CONFIG_DIR = testConfigDir;
+process.env.CLEANSWEEP_AGENTS_DIR = testAgentsDir;
 
 const { formatBytes, pathExists } = require('../electron/utils');
 const { getConfig, updateConfig, isPathWhitelisted } = require('../electron/config');
@@ -17,6 +19,7 @@ const { scanDuplicateFiles, removeDuplicates } = require('../electron/duplicates
 const { scanDevProjects, purgeArtifacts } = require('../electron/purger');
 const { scanInstallers, cleanInstallers } = require('../electron/installer');
 const { scanLargeAndOldFiles } = require('../electron/analyzer');
+const { getScheduleStatus, configureSchedule } = require('../electron/scheduler');
 
 test('utils: formatBytes handles various byte ranges', () => {
   assert.equal(formatBytes(0), '0 B');
@@ -199,4 +202,26 @@ test('history: logs operations and calculates cumulative statistics', async () =
   assert.ok(updatedHistory.totalLifetimeBytes >= initialReclaimed + 1048576);
   assert.ok(updatedHistory.entries.length > 0);
   assert.equal(updatedHistory.entries[0].bytesReclaimed, 1048576);
+});
+
+test('scheduler: configures and removes native macOS LaunchAgent daemon', async () => {
+  const initial = await getScheduleStatus();
+  assert.equal(initial.enabled, false);
+
+  // Enable daily
+  const dailyRes = await configureSchedule('daily');
+  assert.ok(dailyRes.success);
+  assert.equal(dailyRes.enabled, true);
+  assert.equal(dailyRes.frequency, 'daily');
+  assert.equal(await pathExists(dailyRes.plistPath), true);
+
+  const activeStatus = await getScheduleStatus();
+  assert.equal(activeStatus.enabled, true);
+  assert.equal(activeStatus.frequency, 'daily');
+
+  // Disable schedule
+  const offRes = await configureSchedule('off');
+  assert.ok(offRes.success);
+  assert.equal(offRes.enabled, false);
+  assert.equal(await pathExists(dailyRes.plistPath), false);
 });

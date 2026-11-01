@@ -12,6 +12,7 @@ const { scanSlimmableApps, slimApp } = require('./slimmer');
 const { getHistory, recordHistoryEntry, clearHistory } = require('./history');
 const { scanInstallers, cleanInstallers } = require('./installer');
 const { getConfig, updateConfig } = require('./config');
+const { getScheduleStatus, configureSchedule } = require('./scheduler');
 const { safeDelete } = require('./utils');
 
 let mainWindow;
@@ -233,6 +234,15 @@ ipcMain.handle('get-config', async () => {
 
 ipcMain.handle('update-config', async (event, updates) => {
   return await updateConfig(updates);
+});
+
+// 12b. Scheduled Clean LaunchAgent (PureMac parity)
+ipcMain.handle('get-schedule-status', async () => {
+  return await getScheduleStatus();
+});
+
+ipcMain.handle('configure-schedule', async (event, frequency) => {
+  return await configureSchedule(frequency);
 });
 
 // 13. System Utilities (Finder, URLs)

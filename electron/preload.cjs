@@ -58,6 +58,8 @@ const api = {
   // 12. Preferences & Whitelist (PureMac Settings)
   getConfig: () => ipcRenderer.invoke('get-config'),
   updateConfig: (updates) => ipcRenderer.invoke('update-config', updates),
+  getScheduleStatus: () => ipcRenderer.invoke('get-schedule-status'),
+  configureSchedule: (frequency) => ipcRenderer.invoke('configure-schedule', frequency),
 
   // 13. Utilities
   revealInFinder: (targetPath) => ipcRenderer.invoke('reveal-in-finder', targetPath),

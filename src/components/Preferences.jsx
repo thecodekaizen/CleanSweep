@@ -141,7 +141,12 @@ export default function Preferences() {
                 <button 
                   key={s} 
                   className={`category-tab ${config.autoCleanSchedule === s ? 'active' : ''}`}
-                  onClick={() => handleSave({ ...config, autoCleanSchedule: s })}
+                  onClick={async () => {
+                    handleSave({ ...config, autoCleanSchedule: s });
+                    if (window.cleanSweepAPI?.configureSchedule) {
+                      await window.cleanSweepAPI.configureSchedule(s);
+                    }
+                  }}
                 >
                   {s.charAt(0).toUpperCase() + s.slice(1)}
                 </button>

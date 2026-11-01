@@ -58,6 +58,7 @@ function printHelp() {
   console.log(`  ${c.green}installer${c.reset}          Find and remove leftover installer packages (.dmg / .pkg)`);
   console.log(`  ${c.green}history${c.reset}            Display lifetime reclaimed storage history and audit log`);
   console.log(`  ${c.green}update${c.reset}             Check and pull the latest CleanSweep updates`);
+  console.log(`  ${c.green}schedule${c.reset}           Manage automatic background cleaning schedule (daily, weekly, off)`);
   console.log(`  ${c.green}menu${c.reset}               Launch the interactive terminal menu (default if no args)`);
   console.log(`  ${c.green}help${c.reset}               Show this help message\n`);
   console.log(`${c.bold}OPTIONS:${c.reset}`);
@@ -98,6 +99,22 @@ async function handleStatus() {
 }
 
 async function handleClean() {
+  if (args.includes('--silent')) {
+    const scanResult = await scanSystem();
+    const selected = scanResult.items.filter(i => i.defaultChecked);
+    const result = await cleanSystem(selected, { dryRun: false, useTrash: true });
+    if (result.cleanedBytes > 0) {
+      await recordHistoryEntry({
+        type: 'Automated Schedule',
+        bytesReclaimed: result.cleanedBytes,
+        itemCount: result.cleanedCount,
+        details: 'Automated background scheduled clean'
+      });
+    }
+    console.log(`[CleanSweep Scheduler] Cleaned ${result.cleanedCount} items (${result.cleanedFormatted} freed).`);
+    return;
+  }
+
   const isDryRun = args.includes('--dry-run');
   const jsonMode = args.includes('--json');
   const cleanAll = args.includes('--all');
@@ -522,6 +539,37 @@ async function handleUpdate() {
   }
 }
 
+async function handleSchedule() {
+  printBanner();
+  const { getScheduleStatus, configureSchedule } = require('../electron/scheduler.js');
+  const target = args[1] ? args[1].toLowerCase() : null;
+
+  if (target && ['daily', 'weekly', 'off', 'none'].includes(target)) {
+    console.log(`${c.blue}Updating automated background schedule to '${target}'...${c.reset}`);
+    const res = await configureSchedule(target === 'off' ? 'none' : target);
+    if (res.success) {
+      if (res.enabled) {
+        console.log(`${c.green}✓ CleanSweep automated background cleaning enabled (${res.frequency}).${c.reset}`);
+        console.log(`  Installed daemon: ${c.dim}${res.plistPath}${c.reset}\n`);
+      } else {
+        console.log(`${c.yellow}✓ CleanSweep background schedule disabled.${c.reset}\n`);
+      }
+    } else {
+      console.log(`${c.red}Failed to configure schedule:${c.reset} ${res.error}\n`);
+    }
+  } else {
+    const status = await getScheduleStatus();
+    console.log(`${c.bold}Automated Background Schedule Status:${c.reset}`);
+    console.log(`  Active:    ${status.enabled ? c.green + 'Enabled' + c.reset : c.dim + 'Disabled' + c.reset}`);
+    console.log(`  Frequency: ${c.cyan}${status.frequency}${c.reset}`);
+    console.log(`  Daemon:    ${c.dim}${status.plistPath}${c.reset}\n`);
+    console.log(`To change schedule:`);
+    console.log(`  ${c.green}sweep schedule daily${c.reset}   — Run cleanup every 24 hours`);
+    console.log(`  ${c.green}sweep schedule weekly${c.reset}  — Run cleanup every 7 days`);
+    console.log(`  ${c.green}sweep schedule off${c.reset}     — Disable background schedule\n`);
+  }
+}
+
 async function main() {
   if (args.includes('--version') || args.includes('-v')) {
     console.log('CleanSweep CLI v1.0.0');
@@ -552,6 +600,9 @@ async function main() {
       break;
     case 'update':
       await handleUpdate();
+      break;
+    case 'schedule':
+      await handleSchedule();
       break;
     case 'apps':
       await handleApps();
