@@ -54,6 +54,10 @@ function printHelp() {
   console.log(`  ${c.green}uninstall <name>${c.reset}    Completely uninstall an application and its leftover files`);
   console.log(`  ${c.green}analyze [dir]${c.reset}      Find large and old files taking up space`);
   console.log(`  ${c.green}optimize${c.reset}           Run macOS maintenance tasks (Flush DNS, purge RAM, rebuild services)`);
+  console.log(`  ${c.green}slim${c.reset}               Remove foreign language packs from installed applications`);
+  console.log(`  ${c.green}installer${c.reset}          Find and remove leftover installer packages (.dmg / .pkg)`);
+  console.log(`  ${c.green}history${c.reset}            Display lifetime reclaimed storage history and audit log`);
+  console.log(`  ${c.green}update${c.reset}             Check and pull the latest CleanSweep updates`);
   console.log(`  ${c.green}menu${c.reset}               Launch the interactive terminal menu (default if no args)`);
   console.log(`  ${c.green}help${c.reset}               Show this help message\n`);
   console.log(`${c.bold}OPTIONS:${c.reset}`);
@@ -452,6 +456,7 @@ async function handleInteractiveMenu() {
   console.log(`  ${c.cyan}8${c.reset} - 📊 System Health & Activity Dashboard`);
   console.log(`  ${c.cyan}9${c.reset} - 📂 Analyze Large & Old Files`);
   console.log(`  ${c.cyan}h${c.reset} - 📜 View Cleanup History & Lifetime Stats`);
+  console.log(`  ${c.cyan}u${c.reset} - 🔄 Check for Updates`);
   console.log(`  ${c.cyan}0${c.reset} - Exit\n`);
 
   const rl = readline.createInterface({
@@ -473,9 +478,48 @@ async function handleInteractiveMenu() {
       case '8': await handleStatus(); break;
       case '9': await handleAnalyze(); break;
       case 'h': case 'H': await handleHistory(); break;
+      case 'u': case 'U': await handleUpdate(); break;
       default: console.log('Exiting CleanSweep.'); break;
     }
   });
+}
+
+async function handleUpdate() {
+  printBanner();
+  console.log(`${c.blue}Checking for CleanSweep updates...${c.reset}`);
+  
+  const { fileURLToPath } = await import('url');
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+  const repoDir = path.resolve(scriptDir, '..');
+  
+  const { pathExists } = require('../electron/utils.js');
+  const isGitRepo = await pathExists(path.join(repoDir, '.git'));
+  
+  if (!isGitRepo) {
+    console.log(`${c.yellow}Installed outside a local git repository.${c.reset}`);
+    console.log(`To update, run the official installer:`);
+    console.log(`  ${c.cyan}curl -fsSL https://raw.githubusercontent.com/thecodekaizen/clean-my-mac/main/install.sh | bash${c.reset}\n`);
+    return;
+  }
+  
+  const { exec } = require('child_process');
+  const { promisify } = require('util');
+  const execAsync = promisify(exec);
+  
+  try {
+    await execAsync('git fetch origin main --quiet', { cwd: repoDir });
+    const { stdout: statusOut } = await execAsync('git status -uno', { cwd: repoDir });
+    
+    if (statusOut.includes('Your branch is behind') || statusOut.includes('can be fast-forwarded')) {
+      console.log(`${c.green}New version found! Pulling updates...${c.reset}`);
+      await execAsync('git pull --ff-only origin main', { cwd: repoDir });
+      console.log(`${c.green}✓ CleanSweep successfully updated to the latest version.${c.reset}\n`);
+    } else {
+      console.log(`${c.green}✓ CleanSweep is already up to date!${c.reset}\n`);
+    }
+  } catch (err) {
+    console.error(`${c.red}Update check failed:${c.reset}`, err.message);
+  }
 }
 
 async function main() {
@@ -505,6 +549,9 @@ async function main() {
       break;
     case 'history':
       await handleHistory();
+      break;
+    case 'update':
+      await handleUpdate();
       break;
     case 'apps':
       await handleApps();
