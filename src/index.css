@@ -1690,3 +1690,144 @@ body {
   color: var(--text-secondary);
   gap: 8px;
 }
+
+/* History Log Styles */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.history-icon-wrapper {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.history-main-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.history-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-type {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.history-details {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.history-stats {
+  text-align: right;
+  min-width: 80px;
+}
+
+/* Preferences Styles */
+.preferences-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.pref-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pref-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.pref-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.pref-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.pref-toggle-info strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pref-toggle-info p {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.schedule-pills {
+  display: flex;
+  gap: 8px;
+}
+
+.whitelist-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.whitelist-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.whitelist-row {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-family: ui-monospace, Menlo, Monaco, monospace;
+}
+
+.whitelist-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* App Slimmer Styles */
+.slimmer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

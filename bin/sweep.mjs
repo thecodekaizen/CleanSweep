@@ -17,6 +17,9 @@ const { getOptimizationTasks, runOptimization } = require('../electron/optimizer
 const { getLiveSystemHealth } = require('../electron/monitor.js');
 const { scanDevProjects, purgeArtifacts } = require('../electron/purger.js');
 const { scanDuplicateFiles, removeDuplicates } = require('../electron/duplicates.js');
+const { scanSlimmableApps, slimApp } = require('../electron/slimmer.js');
+const { getHistory, recordHistoryEntry } = require('../electron/history.js');
+const { scanInstallers, cleanInstallers } = require('../electron/installer.js');
 
 const args = process.argv.slice(2);
 const command = args[0] || 'menu';
@@ -294,6 +297,129 @@ async function handleAnalyze() {
   console.log('');
 }
 
+async function handleSlim() {
+  const isDryRun = args.includes('--dry-run');
+  const jsonMode = args.includes('--json');
+
+  if (!jsonMode) {
+    printBanner();
+    process.stdout.write(`${c.dim}Scanning application bundles for unneeded localizations...${c.reset}\r`);
+  }
+
+  const result = await scanSlimmableApps();
+
+  if (jsonMode) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  console.log(`\r${c.bold}Slimmable Applications:${c.reset} ${c.yellow}${result.grandTotalFormatted}${c.reset} across ${result.totalApps} apps\n`);
+
+  result.apps.slice(0, 20).forEach(app => {
+    console.log(`  ${c.cyan}•${c.reset} ${app.appName.padEnd(28)} ${c.bold}${app.totalSlimFormatted.padEnd(10)}${c.reset} ${c.dim}(${app.localesCount} language packs)${c.reset}`);
+  });
+
+  if (result.apps.length === 0) {
+    console.log(`  ${c.dim}All applications are already slimmed down.${c.reset}\n`);
+    return;
+  }
+
+  if (isDryRun) {
+    console.log(`\n${c.bold}[DRY RUN] Would slim ${result.totalApps} applications (${result.grandTotalFormatted}).${c.reset}\n`);
+    return;
+  }
+
+  console.log(`\n${c.bold}Slimming applications...${c.reset}`);
+  let totalStripped = 0;
+  for (const a of result.apps) {
+    const res = await slimApp(a.locales.map(l => l.path), { useTrash: true });
+    totalStripped += res.cleanedCount;
+  }
+
+  await recordHistoryEntry({
+    type: 'App Slimmer',
+    bytesReclaimed: result.grandTotalBytes,
+    itemCount: totalStripped,
+    details: `Slimmed ${result.apps.length} apps by stripping ${totalStripped} unused language packs`
+  });
+
+  console.log(`\n${c.bold}${c.green}✓ Done!${c.reset} Stripped ${totalStripped} language packs (${result.grandTotalFormatted} freed).\n`);
+}
+
+async function handleInstaller() {
+  const isDryRun = args.includes('--dry-run');
+  const jsonMode = args.includes('--json');
+
+  if (!jsonMode) {
+    printBanner();
+    process.stdout.write(`${c.dim}Searching for downloaded installer packages...${c.reset}\r`);
+  }
+
+  const result = await scanInstallers();
+
+  if (jsonMode) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  console.log(`\r${c.bold}Installer Packages Found (.dmg / .pkg / .iso):${c.reset} ${c.yellow}${result.totalFormatted}${c.reset} in ${result.totalCount} packages\n`);
+
+  result.installers.forEach(inst => {
+    console.log(`  ${c.cyan}•${c.reset} ${inst.name.padEnd(36)} ${c.bold}${inst.sizeFormatted.padEnd(10)}${c.reset} ${c.dim}[${inst.ageDays}d old] ${inst.path}${c.reset}`);
+  });
+
+  if (result.installers.length === 0) {
+    console.log(`  ${c.dim}No leftover installer packages found.${c.reset}\n`);
+    return;
+  }
+
+  if (isDryRun) {
+    console.log(`\n${c.bold}[DRY RUN] Would clean ${result.totalCount} installer packages (${result.totalFormatted}).${c.reset}\n`);
+    return;
+  }
+
+  const shouldClean = args.includes('--clean');
+  if (shouldClean) {
+    const res = await cleanInstallers(result.installers.map(i => i.path), { useTrash: true });
+    await recordHistoryEntry({
+      type: 'Installers Clean',
+      bytesReclaimed: result.totalBytes,
+      itemCount: res.cleanedCount,
+      details: `Removed ${res.cleanedCount} installer packages`
+    });
+    console.log(`\n${c.bold}${c.green}✓ Done!${c.reset} ${res.message}\n`);
+  } else {
+    console.log(`\n${c.dim}Tip: Run 'sweep installer --clean' to move all identified installer packages to Trash.${c.reset}\n`);
+  }
+}
+
+async function handleHistory() {
+  const jsonMode = args.includes('--json');
+  const history = await getHistory();
+
+  if (jsonMode) {
+    console.log(JSON.stringify(history, null, 2));
+    return;
+  }
+
+  printBanner();
+  console.log(`${c.bold}Storage Optimization Lifetime History:${c.reset}`);
+  console.log(`  Total Reclaimed: ${c.bold}${c.green}${history.totalLifetimeFormatted}${c.reset}`);
+  console.log(`  Total Actions:   ${c.bold}${history.totalOperations}${c.reset} operations\n`);
+
+  console.log(`${c.bold}Recent Maintenance Runs:${c.reset}`);
+  history.entries.slice(0, 15).forEach(e => {
+    const dateStr = new Date(e.timestamp).toLocaleDateString();
+    const bytesStr = e.bytesReclaimed > 0 ? ` (+${e.reclaimedFormatted})` : '';
+    console.log(`  ${c.cyan}•${c.reset} [${dateStr}] ${c.bold}${e.type.padEnd(18)}${c.reset} ${e.details}${c.green}${bytesStr}${c.reset}`);
+  });
+
+  if (history.entries.length === 0) {
+    console.log(`  ${c.dim}No maintenance history recorded yet.${c.reset}`);
+  }
+  console.log('');
+}
+
 async function handleOptimize() {
   printBanner();
   console.log(`${c.bold}Running macOS System Optimization Tasks...${c.reset}\n`);
@@ -319,10 +445,13 @@ async function handleInteractiveMenu() {
   console.log(`  ${c.cyan}1${c.reset} - 🧹 Smart Clean (System & Developer Caches)`);
   console.log(`  ${c.cyan}2${c.reset} - 🏗️  Purge Project Artifacts (node_modules, target, .venv)`);
   console.log(`  ${c.cyan}3${c.reset} - ♊ Duplicate File Finder (SHA-256 match)`);
-  console.log(`  ${c.cyan}4${c.reset} - 📦 Inspect Installed Apps & Leftovers`);
-  console.log(`  ${c.cyan}5${c.reset} - ⚡ Run System Maintenance (Flush DNS, purge RAM)`);
-  console.log(`  ${c.cyan}6${c.reset} - 📊 System Health & Activity Dashboard`);
-  console.log(`  ${c.cyan}7${c.reset} - 📂 Analyze Large & Old Files`);
+  console.log(`  ${c.cyan}4${c.reset} - ✂️  App Localization Slimmer (Strip unused languages)`);
+  console.log(`  ${c.cyan}5${c.reset} - 💿 Downloaded Installer Cleaner (.dmg/.pkg)`);
+  console.log(`  ${c.cyan}6${c.reset} - 📦 Inspect Installed Apps & Leftovers`);
+  console.log(`  ${c.cyan}7${c.reset} - ⚡ Run System Maintenance (Flush DNS, purge RAM)`);
+  console.log(`  ${c.cyan}8${c.reset} - 📊 System Health & Activity Dashboard`);
+  console.log(`  ${c.cyan}9${c.reset} - 📂 Analyze Large & Old Files`);
+  console.log(`  ${c.cyan}h${c.reset} - 📜 View Cleanup History & Lifetime Stats`);
   console.log(`  ${c.cyan}0${c.reset} - Exit\n`);
 
   const rl = readline.createInterface({
@@ -330,17 +459,20 @@ async function handleInteractiveMenu() {
     output: process.stdout
   });
 
-  rl.question(`${c.bold}Enter your choice [1-7]: ${c.reset}`, async (answer) => {
+  rl.question(`${c.bold}Enter your choice: ${c.reset}`, async (answer) => {
     rl.close();
     console.log('');
     switch (answer.trim()) {
       case '1': await handleClean(); break;
       case '2': await handlePurge(); break;
       case '3': await handleDuplicates(); break;
-      case '4': await handleApps(); break;
-      case '5': await handleOptimize(); break;
-      case '6': await handleStatus(); break;
-      case '7': await handleAnalyze(); break;
+      case '4': await handleSlim(); break;
+      case '5': await handleInstaller(); break;
+      case '6': await handleApps(); break;
+      case '7': await handleOptimize(); break;
+      case '8': await handleStatus(); break;
+      case '9': await handleAnalyze(); break;
+      case 'h': case 'H': await handleHistory(); break;
       default: console.log('Exiting CleanSweep.'); break;
     }
   });
@@ -364,6 +496,15 @@ async function main() {
       break;
     case 'duplicates':
       await handleDuplicates();
+      break;
+    case 'slim':
+      await handleSlim();
+      break;
+    case 'installer':
+      await handleInstaller();
+      break;
+    case 'history':
+      await handleHistory();
       break;
     case 'apps':
       await handleApps();

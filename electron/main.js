@@ -8,6 +8,10 @@ const { getLiveSystemHealth } = require('./monitor');
 const { getStartupItems, removeStartupItem } = require('./startup');
 const { scanDevProjects, purgeArtifacts } = require('./purger');
 const { scanDuplicateFiles, removeDuplicates } = require('./duplicates');
+const { scanSlimmableApps, slimApp } = require('./slimmer');
+const { getHistory, recordHistoryEntry, clearHistory } = require('./history');
+const { scanInstallers, cleanInstallers } = require('./installer');
+const { getConfig, updateConfig } = require('./config');
 const { safeDelete } = require('./utils');
 
 let mainWindow;
@@ -64,11 +68,20 @@ ipcMain.handle('scan-system', async () => {
 });
 
 ipcMain.handle('clean-system', async (event, { items, options }) => {
-  return await cleanSystem(items, options, (progress) => {
+  const result = await cleanSystem(items, options, (progress) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('clean-progress', progress);
     }
   });
+  if (result.success && !options?.dryRun && result.cleanedBytes > 0) {
+    await recordHistoryEntry({
+      type: 'Smart Clean',
+      bytesReclaimed: result.cleanedBytes,
+      itemCount: result.cleanedCount,
+      details: `${result.cleanedCount} items cleaned across system and developer caches`
+    });
+  }
+  return result;
 });
 
 // 3. App Uninstaller & Leftover Cleaner
@@ -81,7 +94,16 @@ ipcMain.handle('scan-apps', async () => {
 });
 
 ipcMain.handle('uninstall-app', async (event, { appPath, associatedFiles, options }) => {
-  return await uninstallApp(appPath, associatedFiles, options);
+  const res = await uninstallApp(appPath, associatedFiles, options);
+  if (res.success) {
+    await recordHistoryEntry({
+      type: 'App Uninstall',
+      bytesReclaimed: 0,
+      itemCount: res.cleanedCount,
+      details: `Uninstalled ${path.basename(appPath, '.app')} and ${res.cleanedCount} associated files`
+    });
+  }
+  return res;
 });
 
 ipcMain.handle('scan-orphans', async () => {
@@ -93,6 +115,14 @@ ipcMain.handle('clean-orphans', async (event, { orphanPaths, options }) => {
   for (const p of orphanPaths) {
     const res = await safeDelete(p, options?.useTrash !== false);
     if (res.success && !res.skipped) cleanedCount++;
+  }
+  if (cleanedCount > 0) {
+    await recordHistoryEntry({
+      type: 'Orphan Leftovers',
+      bytesReclaimed: 0,
+      itemCount: cleanedCount,
+      details: `Cleaned ${cleanedCount} orphaned leftover files`
+    });
   }
   return { success: true, cleanedCount };
 });
@@ -139,10 +169,73 @@ ipcMain.handle('scan-duplicates', async (event, { targetDirs, minSizeBytes }) =>
 });
 
 ipcMain.handle('remove-duplicates', async (event, { duplicatePaths, options }) => {
-  return await removeDuplicates(duplicatePaths, options);
+  const res = await removeDuplicates(duplicatePaths, options);
+  if (res.success && res.cleanedCount > 0) {
+    await recordHistoryEntry({
+      type: 'Duplicate Files',
+      bytesReclaimed: 0,
+      itemCount: res.cleanedCount,
+      details: `Removed ${res.cleanedCount} verified duplicate files`
+    });
+  }
+  return res;
 });
 
-// 9. System Utilities (Finder, URLs)
+// 9. App Localization Slimmer (Mole mo slim)
+ipcMain.handle('scan-slimmable-apps', async () => {
+  return await scanSlimmableApps();
+});
+
+ipcMain.handle('slim-app', async (event, { localePaths, options }) => {
+  const res = await slimApp(localePaths, options);
+  if (res.success && res.cleanedCount > 0) {
+    await recordHistoryEntry({
+      type: 'App Slimmer',
+      bytesReclaimed: 0,
+      itemCount: res.cleanedCount,
+      details: `Removed ${res.cleanedCount} unneeded language localization files`
+    });
+  }
+  return res;
+});
+
+// 10. Installer Package Cleaner (Mole mo installer)
+ipcMain.handle('scan-installers', async () => {
+  return await scanInstallers();
+});
+
+ipcMain.handle('clean-installers', async (event, { installerPaths, options }) => {
+  const res = await cleanInstallers(installerPaths, options);
+  if (res.success && res.cleanedCount > 0) {
+    await recordHistoryEntry({
+      type: 'Installers Clean',
+      bytesReclaimed: 0,
+      itemCount: res.cleanedCount,
+      details: `Removed ${res.cleanedCount} leftover installer packages (.dmg/.pkg)`
+    });
+  }
+  return res;
+});
+
+// 11. Cleanup History & Audit Log (Mole mo history)
+ipcMain.handle('get-history', async () => {
+  return await getHistory();
+});
+
+ipcMain.handle('clear-history', async () => {
+  return await clearHistory();
+});
+
+// 12. Settings, Preferences & Whitelist (PureMac Settings)
+ipcMain.handle('get-config', async () => {
+  return await getConfig();
+});
+
+ipcMain.handle('update-config', async (event, updates) => {
+  return await updateConfig(updates);
+});
+
+// 13. System Utilities (Finder, URLs)
 ipcMain.handle('reveal-in-finder', async (event, targetPath) => {
   shell.showItemInFolder(targetPath);
   return { success: true };

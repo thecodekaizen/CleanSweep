@@ -9,7 +9,10 @@ import {
   Activity, 
   ShieldCheck,
   FolderArchive,
-  Copy
+  Copy,
+  Scissors,
+  History,
+  Settings
 } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import SmartClean from './components/SmartClean';
@@ -20,6 +23,9 @@ import StartupItems from './components/StartupItems';
 import ActivityMonitor from './components/ActivityMonitor';
 import ProjectPurger from './components/ProjectPurger';
 import DuplicateFinder from './components/DuplicateFinder';
+import AppSlimmer from './components/AppSlimmer';
+import HistoryLog from './components/HistoryLog';
+import Preferences from './components/Preferences';
 import './index.css';
 
 export default function App() {
@@ -210,6 +216,29 @@ export default function App() {
             <Activity size={16} />
             <span>Activity Monitor</span>
           </div>
+          <div 
+            className={`nav-item ${activeTab === 'slimmer' ? 'active' : ''}`}
+            onClick={() => setActiveTab('slimmer')}
+          >
+            <Scissors size={16} />
+            <span>App Slimmer</span>
+          </div>
+
+          <div 
+            className={`nav-item ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            <History size={16} />
+            <span>Cleanup History</span>
+          </div>
+
+          <div 
+            className={`nav-item ${activeTab === 'preferences' ? 'active' : ''}`}
+            onClick={() => setActiveTab('preferences')}
+          >
+            <Settings size={16} />
+            <span>Preferences</span>
+          </div>
         </nav>
 
         {/* Sidebar Footer with Telemetry Privacy Indicator */}
@@ -236,6 +265,9 @@ export default function App() {
               {activeTab === 'optimizer' && 'System Maintenance & Optimization'}
               {activeTab === 'startup' && 'Startup & Background Launch Items'}
               {activeTab === 'activity' && 'Real-Time Activity Monitor'}
+              {activeTab === 'slimmer' && 'App Localization Slimmer'}
+              {activeTab === 'history' && 'Cleanup History & Lifetime Statistics'}
+              {activeTab === 'preferences' && 'CleanSweep Preferences & Safety Rules'}
             </h1>
             <p>
               {activeTab === 'dashboard' && 'Monitor health and clean system junk with zero telemetry'}
@@ -247,6 +279,9 @@ export default function App() {
               {activeTab === 'optimizer' && 'Flush DNS, purge RAM, rebuild services, and fix macOS performance issues'}
               {activeTab === 'startup' && 'Manage background LaunchAgents and daemons to boost boot speed'}
               {activeTab === 'activity' && 'Live CPU, memory pressure, disk I/O and battery telemetry'}
+              {activeTab === 'slimmer' && 'Strip unneeded language localization files (.lproj) from applications to save storage'}
+              {activeTab === 'history' && 'View your lifetime reclaimed disk storage and detailed operation audit logs'}
+              {activeTab === 'preferences' && 'Manage deletion safety, background schedules, and protected folder whitelists'}
             </p>
           </div>
         </header>
@@ -304,6 +339,18 @@ export default function App() {
               metrics={metrics} 
               refreshMetrics={fetchMetrics} 
             />
+          )}
+
+          {activeTab === 'slimmer' && (
+            <AppSlimmer />
+          )}
+
+          {activeTab === 'history' && (
+            <HistoryLog />
+          )}
+
+          {activeTab === 'preferences' && (
+            <Preferences />
           )}
         </div>
       </main>

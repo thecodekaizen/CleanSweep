@@ -73,14 +73,22 @@ Analyzes 25+ high-impact directories across your Mac:
   - **Pass 2**: Cryptographic **SHA-256** checksum verification across candidate files.
 - Automatically keeps the oldest original file and selects all redundant duplicate copies for safe trashing.
 
-### 5. 📂 Large & Old Files Explorer
+### 5. ✂️ App Localization Slimmer (Mole `mo slim`)
+- Scans installed macOS application bundles for unused language `.lproj` directories (often 50+ languages shipped per app like Slack, Discord, Chrome).
+- Strips unneeded languages while keeping your active system language, saving hundreds of megabytes across your `/Applications` directory.
+
+### 6. 💿 Downloaded Installer Cleaner (Mole `mo installer`)
+- Dedicated scanner for forgotten installation packages (`.dmg`, `.pkg`, `.iso`) in Downloads and Desktop.
+- Batch moves installer images to Trash once an app is already installed.
+
+### 7. 📂 Large & Old Files Explorer
 - Instantly surfaces multi-gigabyte files sitting idle in Downloads, Documents, Desktop, Movies, and Music.
 - **Size Filters**: `>50 MB`, `>100 MB`, `>500 MB`, `>1 GB`.
 - **Age Filters**: `All`, `>30 Days`, `>90 Days`, `>180 Days`, `>1 Year`.
 - **Categorization**: Grouped into Archives & Disk Images (`.dmg`, `.iso`, `.zip`, `.pkg`), Videos, Audio, Documents, and App Packages.
 - One-click **Reveal in Finder** and batch Move to Trash.
 
-### 4. ⚡ macOS System Maintenance & Optimizer
+### 8. ⚡ macOS System Maintenance & Optimizer
 One-click maintenance routines to speed up and stabilize macOS:
 - **Flush DNS Cache**: Flushes system DNS cache and reloads `mDNSResponder` to resolve web glitches and broken connections.
 - **Purge Inactive RAM**: Reclaims physical memory held by inactive disk cache and returns it to the free system pool.
@@ -88,17 +96,27 @@ One-click maintenance routines to speed up and stabilize macOS:
 - **Reset QuickLook Server**: Clears corrupted preview thumbnail caches and restarts the QuickLook daemon.
 - **Trim APFS Local Snapshots**: Identifies and trims stale local Time Machine backup snapshots consuming hidden SSD space.
 - **Check Spotlight Health**: Inspects indexing status across the primary APFS drive.
+- **Touch ID for Sudo**: Verifies biometric Touch ID authentication configuration in `/etc/pam.d/sudo_local`.
 
-### 5. 🚀 Startup & Background Launch Items
+### 9. 🚀 Startup & Background Launch Items
 - Inspects `~/Library/LaunchAgents`, `/Library/LaunchAgents`, and `/Library/LaunchDaemons`.
 - Identifies background executables and services running automatically at boot.
 - Disable or move unwanted user-level startup items to Trash to speed up Mac boot times.
 
-### 6. 📊 Real-Time Activity Monitor
+### 10. 📊 Real-Time Activity Monitor
 - Live CPU utilization gauge (% load, physical and efficiency core count, Apple Silicon / Intel architecture).
 - Memory breakdown: Active, Wired, Inactive, Compressed, and Free RAM.
 - APFS disk capacity, allocated space, and available storage.
 - Battery health, percentage, power source (AC vs Battery), and charging state.
+
+### 11. 📜 Lifetime Storage History & Audit Log (Mole `mo history`)
+- Automatically records every cleanup event, timestamp, items removed, and storage reclaimed.
+- Displays lifetime storage savings and complete historical operation logs stored safely in `~/.config/cleansweep/history.json`.
+
+### 12. ⚙️ Automated Schedules & Whitelist Rules (PureMac Settings)
+- Configure automated background maintenance schedules (Daily, Weekly, Monthly).
+- Custom directory whitelist to strictly protect sensitive projects and folders from ever being touched.
+- Direct deep-links to native macOS System Settings (Full Disk Access, Privacy & Security, Spotlight).
 
 ---
 

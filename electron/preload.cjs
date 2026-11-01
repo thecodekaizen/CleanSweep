@@ -41,7 +41,25 @@ const api = {
   removeDuplicates: (duplicatePaths, options = { useTrash: true }) => 
     ipcRenderer.invoke('remove-duplicates', { duplicatePaths, options }),
 
-  // 9. Utilities
+  // 9. App Localization Slimmer (Mole mo slim)
+  scanSlimmableApps: () => ipcRenderer.invoke('scan-slimmable-apps'),
+  slimApp: (localePaths, options = { useTrash: true }) => 
+    ipcRenderer.invoke('slim-app', { localePaths, options }),
+
+  // 10. Installer Packages (Mole mo installer)
+  scanInstallers: () => ipcRenderer.invoke('scan-installers'),
+  cleanInstallers: (installerPaths, options = { useTrash: true }) => 
+    ipcRenderer.invoke('clean-installers', { installerPaths, options }),
+
+  // 11. Cleanup History (Mole mo history)
+  getHistory: () => ipcRenderer.invoke('get-history'),
+  clearHistory: () => ipcRenderer.invoke('clear-history'),
+
+  // 12. Preferences & Whitelist (PureMac Settings)
+  getConfig: () => ipcRenderer.invoke('get-config'),
+  updateConfig: (updates) => ipcRenderer.invoke('update-config', updates),
+
+  // 13. Utilities
   revealInFinder: (targetPath) => ipcRenderer.invoke('reveal-in-finder', targetPath),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
 
