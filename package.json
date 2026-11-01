@@ -20,7 +20,6 @@
   "build": {
     "appId": "com.thecodekaizen.cleansweep",
     "productName": "CleanSweep",
-    "electronDist": "node_modules/electron/dist",
     "mac": {
       "category": "public.app-category.utilities",
       "target": [
