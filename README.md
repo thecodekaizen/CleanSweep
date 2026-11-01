@@ -1,335 +1,276 @@
 <p align="center">
-  <img src="public/icon.png" width="100" height="100" alt="CleanSweep Logo" />
+  <img src="public/icon.png" width="96" height="96" alt="CleanSweep Icon" />
 </p>
 
 <h1 align="center">CleanSweep</h1>
 
 <p align="center">
-  <strong>The fast, zero-telemetry macOS optimizer, deep app uninstaller, and developer cleaning suite with companion CLI.</strong>
+  A fast, zero-telemetry disk cleaner, application uninstaller, and system optimizer for macOS.
 </p>
 
 <p align="center">
   <a href="https://github.com/thecodekaizen/clean-my-mac/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/thecodekaizen/clean-my-mac/ci.yml?branch=main&label=CI&style=flat-square&color=10b981" alt="CI Status" />
+    <img src="https://img.shields.io/github/actions/workflow/status/thecodekaizen/clean-my-mac/ci.yml?branch=main&label=Build&style=flat-square" alt="Build Status" />
   </a>
   <a href="https://github.com/thecodekaizen/clean-my-mac/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License" />
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License" />
   </a>
-  <img src="https://img.shields.io/badge/platform-macOS%20(Apple%20Silicon%20%26%20Intel)-6366f1.svg?style=flat-square" alt="Platform" />
-  <img src="https://img.shields.io/badge/telemetry-0%25%20(Privacy%20First)-38bdf8.svg?style=flat-square" alt="Telemetry" />
-  <img src="https://img.shields.io/badge/tests-12%20passing-10b981.svg?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%26%20Intel-black.svg?style=flat-square" alt="macOS" />
+  <img src="https://img.shields.io/badge/Telemetry-None%20(100%25%20Offline)-success.svg?style=flat-square" alt="Zero Telemetry" />
 </p>
 
 <p align="center">
-  <a href="#-quick-install">Quick Install</a> •
-  <a href="#-visual-tour">Visual Tour</a> •
-  <a href="#-core-features">Features</a> •
-  <a href="#-cli-companion-sweep">CLI Companion</a> •
-  <a href="#-menu-bar-tray-companion">Menu Bar Tray</a> •
-  <a href="#-feature-comparison">Comparison</a> •
-  <a href="#-privacy--safety">Privacy &amp; Safety</a>
+  <a href="#installation">Installation</a> •
+  <a href="#overview">Overview</a> •
+  <a href="#features">Features</a> •
+  <a href="#cli-usage">CLI Usage</a> •
+  <a href="#menu-bar-companion">Menu Bar</a> •
+  <a href="#comparison">Comparison</a> •
+  <a href="#safety">Safety</a>
 </p>
 
 ---
 
-## 📸 Visual Tour
+## Overview
 
 <p align="center">
-  <img src="assets/screenshots/hero-banner.svg" width="100%" alt="CleanSweep macOS Glassmorphism Desktop UI" />
+  <img src="assets/screenshots/hero-banner.svg" width="100%" alt="CleanSweep macOS Application" />
 </p>
 
-CleanSweep brings together the raw developer cleanup speed of **[`tw93/mole`](https://github.com/tw93/mole)** and the zero-telemetry, trash-safe macOS aesthetic of **[`momenbasel/PureMac`](https://github.com/momenbasel/PureMac)** into a cohesive, commercial-grade open source suite.
+CleanSweep is a native macOS application and command-line utility built for developers and Mac power users. It combines deep cache cleaning across developer toolchains, safe residue-free app uninstallation, and system maintenance routines without background trackers, subscriptions, or analytics.
+
+### Design Principles
+
+- **Zero Telemetry**: Completely offline. No analytics, tracking pixels, crash telemetry, or network calls.
+- **Trash-First Deletion**: All deletions route through the native macOS Trash (`shell.trashItem`). Items can be restored instantly via Finder.
+- **Developer Stack Support**: Built-in awareness of Xcode caches, package manager stores (`npm`, `pnpm`, `uv`, `cargo`, `pip`), Docker virtual disks, and local AI model stores (`ollama`, `huggingface`).
+- **Dual Interface**: A clean macOS native dark/light desktop app paired with a lightweight terminal companion (`sweep`).
 
 ---
 
-## ⚡ Quick Install
+## Installation
 
-### One-Line Terminal Installer
-Install the global `sweep` companion CLI into `/usr/local/bin` with a single command:
+### Terminal CLI (`sweep`)
+
+Install the `sweep` CLI globally via the official install script:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/thecodekaizen/clean-my-mac/main/install.sh | bash
 ```
 
-Once installed, simply type:
+Run the interactive terminal interface:
 ```bash
 sweep
 ```
 
-### Download the macOS Desktop App
-- Grab the latest prebuilt `.zip` from **[GitHub Releases](https://github.com/thecodekaizen/clean-my-mac/releases)**.
-- Unpack and move `CleanSweep.app` into your `/Applications` directory.
+### Desktop Application
+
+Download the precompiled `CleanSweep-1.0.0-arm64-mac.zip` from [GitHub Releases](https://github.com/thecodekaizen/clean-my-mac/releases), unpack it, and drag `CleanSweep.app` into `/Applications`.
 
 ---
 
-## 💡 Why CleanSweep?
+## Features
 
-Traditional Mac cleaning utilities often charge hefty annual recurring subscriptions, nag users with intrusive upsells, run persistent background tracking daemons, or blindly execute destructive `rm -rf` commands.
+### Smart Cache Cleaner
+Scans over 25 high-volume cache locations across macOS:
+- **System & User Caches**: Application caches (`~/Library/Caches`), diagnostic reports, spindumps, and QuickLook thumbnail databases.
+- **Browsers**: Cache, media, and script storage for Google Chrome, Arc, Safari, Brave, Edge, and Firefox without wiping logins, history, or cookies.
+- **Developer Stores**:
+  - Xcode: `DerivedData`, iOS DeviceSupport symbols, archives, and simulator caches.
+  - Package Managers: `npm` (`_cacache`), `pnpm` store, `yarn`, `bun`, `cocoapods`, and Homebrew download caches.
+  - Languages: `uv` and `pip` wheels, Cargo registry and git checkouts, Go build cache, and Gradle daemons.
+  - IDEs: VS Code extension caches and JetBrains project caches.
+- **Local AI Models**: Downloaded weights and checkpoints from Ollama (`~/.ollama/models`), HuggingFace Hub (`~/.cache/huggingface`), and LM Studio.
+- **Virtualization & Containers**: Reclaimable Docker virtual disks (`Docker.raw`) and Podman machine storage.
 
-CleanSweep was engineered with four unbreakable rules:
-1. **0% Telemetry & 100% Offline**: No analytics packets, tracking pixels, or phone-home pings. Ever.
-2. **Trash-First Safety**: Cleaned items are safely moved to the native macOS Trash via `shell.trashItem`—you can always restore files with one click.
-3. **Developer-First Intelligence**: Deep specialized support for modern software engineering stacks (Xcode DerivedData, npm/pnpm/Bun caches, Python uv, Rust Cargo, Docker virtual disks, and local LLM caches from Ollama & HuggingFace).
-4. **Dual Interface**: Seamlessly switch between a modern **macOS dark/light glassmorphism desktop GUI** and a lightweight, lightning-fast **terminal companion CLI** (`sweep`).
+### Application Uninstaller & Orphan Finder
+- **Application Explorer**: Scans `/Applications` and `~/Applications` with bundle IDs, versions, and true on-disk footprint.
+- **Residual Leftover Discovery**: Detects associated files scattered across `~/Library/Application Support`, `~/Library/Caches`, `~/Library/Preferences`, `~/Library/Containers`, and `~/Library/Saved Application State`.
+- **Orphan Finder**: Identifies leftover preferences and support files left behind by applications previously deleted through Finder.
 
----
+### Project Build Artifact Purger (`sweep purge`)
+Recursively discovers rebuildable project build directories across your workspace:
+- `node_modules` (JavaScript / TypeScript)
+- `.next`, `.nuxt`, `.svelte-kit` (Frontend builds)
+- `target` (Rust Cargo)
+- `.venv`, `venv`, `__pycache__` (Python)
+- `.gradle`, `.dart_tool`, `.turbo`, `dist`, `build`
 
-## ✨ Core Features
+### Duplicate File Finder (`sweep duplicates`)
+- Two-pass duplicate finder:
+  - Pass 1: Size grouping and fast initial 64KB chunk verification.
+  - Pass 2: Full SHA-256 cryptographic hash comparison.
+- Automatically keeps the oldest original file and targets redundant duplicates for safe removal.
 
-### 1. 🧹 Deep Smart Clean
-Inspects and reclaims gigabytes of disk space across 25+ target caches:
-- **System Junk & Diagnostics**: User application caches (`~/Library/Caches`), diagnostic reports, spindumps, and QuickLook thumbnail databases.
-- **Web Browsers**: Cache, media, and script storage for Google Chrome, Arc, Safari, Brave, Microsoft Edge, and Firefox (preserves logins, cookies, and history).
-- **Developer Ecosystem**:
-  - **Xcode**: `DerivedData`, iOS DeviceSupport symbols, simulator runtimes, and archives.
-  - **Package Managers**: npm `_cacache`, Yarn cache, pnpm store, Bun cache, CocoaPods, and Homebrew bottles.
-  - **Languages & Runtimes**: Pip cache, Poetry cache, uv cache, Rust Cargo registry/git cache, Go build cache, and Gradle daemons.
-  - **IDEs**: VS Code extension/GPU caches and JetBrains project indexing caches.
-- **AI & Local Model Caches**: Model weights and blobs downloaded by **Ollama** (`~/.ollama/models`), **LM Studio** (`~/.cache/lm-studio`), and **Hugging Face Hub** (`~/.cache/huggingface`).
-- **Containers & Virtual Disks**: Docker Desktop virtual disks (`Docker.raw`), overlay layers, and Podman machine storage.
-- **Backups & Trash**: User Trash bin, iOS/iPadOS device backups (`MobileSync`), and Apple Mail downloads.
+### Localization Slimmer (`sweep slim`)
+- Scans installed macOS application bundles for foreign `.lproj` language packages.
+- Strips unneeded languages while preserving your active system language and English.
 
-### 2. 📦 Smart App Uninstaller & Residual Orphan Finder
-- **Deep Application Scraper**: Scans `/Applications` and `~/Applications` with native icons, bundle identifiers, versions, and true disk footprint.
-- **Scattered Residue Discovery**: Automatically finds associated leftovers across 10 system locations:
-  - `~/Library/Application Support/<app>`
-  - `~/Library/Caches/<bundle-id>`
-  - `~/Library/Preferences/<bundle-id>.plist`
-  - `~/Library/Saved Application State/<bundle-id>.savedState`
-  - `~/Library/Containers/<bundle-id>` & `~/Library/Group Containers`
-  - `~/Library/Logs`, `~/Library/WebKit`, and `~/Library/HTTPStorages`
-- **Orphan Finder**: Automatically scours your system for leftover preference files and cache folders left behind by apps you deleted months ago.
-- **Trash-Safe Deletion**: Safely trashes app bundles and associated leftovers with instant undo capability.
+### Installer Package Cleaner (`sweep installer`)
+- Scans `Downloads` and `Desktop` for forgotten `.dmg`, `.pkg`, and `.iso` installation files.
+- Safe batch cleanup to recover space once apps are installed.
 
-### 3. 🏗️ Developer Project Artifacts Purger (`sweep purge`)
-- Recursively scans code repositories (`~/Code`, `~/Projects`, `~/Developer`) for stale, rebuildable build directories:
-  - `node_modules` (JavaScript / TypeScript)
-  - `.next`, `.nuxt`, `.svelte-kit` (Frontend builds)
-  - `target` (Rust Cargo)
-  - `.venv`, `venv`, `__pycache__` (Python)
-  - `.turbo`, `.parcel-cache`, `dist`, `build`
-  - `.gradle`, `.dart_tool` (Mobile & Java)
-- One-click purge of project build folders without touching your source code or git history.
+### Large & Old Files Explorer (`sweep large`)
+- Identifies multi-gigabyte or aged files across `Downloads`, `Documents`, `Desktop`, `Movies`, and `Music`.
+- Filter by size (`>50MB`, `>500MB`, `>1GB`) and age (`>30d`, `>90d`, `>1y`).
+- Categorized into Archives, Disk Images, Media, and Documents with one-click Reveal in Finder.
 
-### 4. ♊ Cryptographic Duplicate Finder (SHA-256)
-- **High-speed 2-pass duplicate scanning**:
-  - **Pass 1**: Rapid size-based grouping and 64KB initial chunk verification.
-  - **Pass 2**: Collision-proof cryptographic **SHA-256** checksum calculation.
-- Automatically preserves the oldest original file and selects all redundant copies for safe trash removal.
+### System Maintenance Utilities (`sweep optimize`)
+- **Flush DNS Cache**: Flushes system resolver cache and signals `mDNSResponder`.
+- **Purge Inactive Memory**: Triggers macOS memory pressure release to return inactive disk cache to the free memory pool.
+- **Rebuild LaunchServices**: Fixes duplicate "Open With" contextual menu entries and broken file associations.
+- **Reset QuickLook**: Clears preview thumbnail caches and restarts the QuickLook daemon.
+- **APFS Snapshot Trimming**: Inspects and prunes stale local Time Machine snapshots taking up SSD blocks.
+- **Touch ID for Sudo Check**: Verifies biometric PAM configuration in `/etc/pam.d/sudo_local`.
 
-### 5. ✂️ App Localization Slimmer (`sweep slim`)
-- Scans installed macOS application bundles for foreign language `.lproj` folders (often 50+ languages shipped per app like Slack, Chrome, Zoom).
-- Strips unneeded languages while preserving your active system language, saving hundreds of megabytes on your primary drive.
-
-### 6. 💿 Downloaded Installer Cleaner (`sweep installer`)
-- Scans Downloads and Desktop for forgotten `.dmg`, `.pkg`, and `.iso` installation images.
-- Batch moves installer packages to Trash once applications are already installed.
-
-### 7. 📂 Large & Old Files Explorer (`sweep large`)
-- Instantly surfaces multi-gigabyte files sitting idle across Downloads, Documents, Desktop, Movies, and Music.
-- **Size Filters**: `>50 MB`, `>100 MB`, `>500 MB`, `>1 GB`.
-- **Age Filters**: `All`, `>30 Days`, `>90 Days`, `>180 Days`, `>1 Year`.
-- **Categorization**: Archives & Disk Images, Videos, Audio, Documents, and App Packages.
-- One-click **Reveal in Finder** and batch Move to Trash.
-
-### 8. ⚡ macOS System Maintenance & Performance Optimizer
-One-click maintenance routines to speed up and stabilize macOS:
-- **Flush DNS Cache**: Flushes system DNS cache and signals `mDNSResponder` to resolve web glitches and broken connections.
-- **Purge Inactive RAM**: Reclaims physical memory held by inactive disk cache and returns it to the free system pool.
-- **Rebuild LaunchServices**: Fixes duplicate "Open With" contextual menus and broken file icons.
-- **Reset QuickLook Server**: Clears corrupted preview thumbnail caches and restarts the QuickLook daemon.
-- **Trim APFS Local Snapshots**: Identifies and trims stale local Time Machine backup snapshots consuming hidden SSD space.
-- **Check Spotlight Health**: Inspects indexing status across the primary APFS drive.
-- **Touch ID for Sudo**: Verifies biometric Touch ID authentication configuration in `/etc/pam.d/sudo_local`.
-
-### 9. ⏰ Automated Background Schedule (Native macOS LaunchAgent)
-- Set automated background maintenance on your preferred schedule: **Daily** or **Weekly**.
-- Configures a native macOS `LaunchAgent` daemon (`~/Library/LaunchAgents/com.thecodekaizen.cleansweep.autoclean.plist`) that runs silent optimizations.
-- Manage via GUI or terminal: `sweep schedule daily`, `sweep schedule weekly`, or `sweep schedule off`.
+### Automated Background Scheduler
+- Schedules automatic background cleanups on a **Daily** or **Weekly** interval.
+- Configures a native macOS `LaunchAgent` daemon (`~/Library/LaunchAgents/com.thecodekaizen.cleansweep.autoclean.plist`).
+- Configurable via the GUI Preferences or terminal: `sweep schedule daily`, `sweep schedule weekly`, or `sweep schedule off`.
 
 ---
 
-## 🖥️ Menu Bar Tray Companion
+## Menu Bar Companion
 
 <p align="center">
-  <img src="assets/screenshots/tray-preview.svg" width="600" alt="CleanSweep macOS Menu Bar Tray Companion" />
+  <img src="assets/screenshots/tray-preview.svg" width="560" alt="CleanSweep Menu Bar Status Item" />
 </p>
 
-CleanSweep lives right in your macOS status bar:
-- Displays **live available memory** (e.g. ` 14.2 GB`) in real-time.
-- Click to open the quick-access menu:
-  - Real-time RAM utilization bar (`9.8 GB used / 24 GB (41%)`).
-  - **⚡ Quick Clean (Flush RAM & DNS)**: Instant memory reclaim without opening the main window.
-  - **Open CleanSweep**: Shows and focuses the main application.
-  - **Launch at Login**: Toggles automatic startup.
-- Keeps CleanSweep resident in the menu bar when closing the main window (PureMac behavior).
+CleanSweep includes a lightweight macOS status bar helper:
+- Displays real-time free memory in the top menu bar (e.g. `14.2 GB`).
+- Quick Clean shortcut: Flushes inactive RAM and DNS with one click without opening the window.
+- Closing the desktop window keeps CleanSweep resident in the menu bar.
 
 ---
 
-## 💻 CLI Companion (`sweep`)
+## CLI Usage
 
 <p align="center">
-  <img src="assets/screenshots/cli-preview.svg" width="100%" alt="CleanSweep CLI Terminal Companion Preview" />
+  <img src="assets/screenshots/cli-preview.svg" width="100%" alt="CleanSweep Terminal Output" />
 </p>
 
-CleanSweep features a full-featured terminal companion (`sweep`) designed for power users, SSH sessions, and automation scripts:
+The companion CLI binary `sweep` provides full command parity with the desktop app:
 
 ```bash
-# Launch the interactive terminal menu (default)
+# Interactive menu
 sweep
 
-# Real-time system telemetry (CPU, RAM, Disk, Battery)
+# System metrics (CPU, RAM breakdown, disk space, battery)
 sweep status
 
-# Deep smart clean (with dry-run simulation)
+# Cache cleaner
 sweep clean --dry-run
 sweep clean --all
 
-# Purge rebuildable project build artifacts (node_modules, target, .venv)
+# Project artifacts purger
 sweep purge
-sweep purge ~/Code/MyProject --dry-run
+sweep purge ~/Projects --dry-run
 
-# Cryptographic duplicate finder
+# Duplicate file finder
 sweep duplicates ~/Documents
 sweep duplicates --clean
 
-# Application uninstaller & residue finder
+# Application uninstaller
 sweep apps
-sweep uninstall Slack
+sweep uninstall "Slack"
 
-# Strip foreign language packs from installed apps
+# Localization slimming
 sweep slim --dry-run
 
-# Clean leftover installer packages (.dmg / .pkg)
+# Installer packages cleaner
 sweep installer
 
-# Run macOS system maintenance routines (DNS flush, RAM purge, etc.)
+# Maintenance tasks
 sweep optimize
 
-# Configure automatic background cleaning schedule
+# Background schedule
 sweep schedule daily
-sweep schedule weekly
 sweep schedule off
 
-# View lifetime reclaimed space audit history
+# Audit history
 sweep history
-
-# Check and pull the latest CleanSweep updates
-sweep update
 ```
 
 ### CLI Command Reference
 
-| Command | Arguments | Description |
+| Command | Options | Description |
 | :--- | :--- | :--- |
-| `sweep` | — | Launches the interactive terminal menu |
-| `sweep status` | `[--json]` | Shows real-time CPU, RAM breakdown, disk space, and battery metrics |
-| `sweep clean` | `[--dry-run] [--all] [--json]` | Deep scans and cleans system, browser, container, and developer caches |
-| `sweep purge` | `[dir] [--dry-run]` | Recursively finds and purges `node_modules`, `target`, `.venv`, `.next` |
-| `sweep duplicates` | `[dir] [--clean]` | Detects duplicate files using SHA-256 cryptographic verification |
-| `sweep apps` | `[--json]` | Lists all installed macOS applications and associated storage |
-| `sweep uninstall` | `<app-name>` | Uninstalls an application and all residual leftover files |
-| `sweep slim` | `[app] [--dry-run]` | Strips unneeded foreign language `.lproj` packs from installed apps |
-| `sweep installer` | `[--clean]` | Finds and trashes downloaded `.dmg`, `.pkg`, and `.iso` installers |
-| `sweep analyze` | `[dir] [--min-size]` | Analyzes directory space breakdown and surfaces large & old files |
-| `sweep optimize` | — | Runs macOS maintenance routines (DNS flush, RAM purge, LaunchServices) |
-| `sweep schedule` | `[daily\|weekly\|off]` | Manages the native macOS `LaunchAgent` background clean daemon |
-| `sweep history` | `[--clear]` | Displays lifetime reclaimed storage stats and operation audit trail |
+| `sweep` | — | Interactive terminal menu |
+| `sweep status` | `--json` | Hardware telemetry (CPU, RAM active/wired/free, disk, battery) |
+| `sweep clean` | `--dry-run`, `--all`, `--json` | Scans and cleans system, browser, dev, and container caches |
+| `sweep purge` | `[dir]`, `--dry-run` | Recursively finds and purges `node_modules`, `target`, `.venv` |
+| `sweep duplicates` | `[dir]`, `--clean` | Identifies duplicate files using SHA-256 matching |
+| `sweep apps` | `--json` | Lists installed applications and on-disk size |
+| `sweep uninstall` | `<name>` | Uninstalls an application and all residual leftover files |
+| `sweep slim` | `[app]`, `--dry-run` | Strips unused language `.lproj` folders from applications |
+| `sweep installer` | `--clean` | Finds and removes leftover `.dmg`, `.pkg`, and `.iso` images |
+| `sweep analyze` | `[dir]`, `--min-size` | Scans directory size breakdown and surfaces large files |
+| `sweep optimize` | — | Runs macOS maintenance routines (DNS flush, RAM purge) |
+| `sweep schedule` | `daily`, `weekly`, `off` | Manages the native macOS LaunchAgent background clean daemon |
+| `sweep history` | `--clear` | Displays lifetime reclaimed storage stats and audit logs |
 | `sweep update` | — | Checks remote releases and updates CleanSweep in place |
 
 ---
 
-## 📊 Feature Comparison
+## Comparison
 
-| Feature | CleanSweep (This Project) | tw93/mole | momenbasel/PureMac | CleanMyMac (Paid) |
+| Feature | CleanSweep | tw93/mole | momenbasel/PureMac | CleanMyMac |
 | :--- | :---: | :---: | :---: | :---: |
-| **License** | **Free & MIT Open Source** | Free CLI / Paid GUI | Free & MIT Open Source | Proprietary ($39.95/yr) |
-| **Telemetry & Tracking** | **0% (Zero Telemetry)** | 0% | 0% | Analytics & Telemetry |
-| **Native macOS GUI** | ✅ (Glassmorphism Dark/Light) | ❌ (CLI only / Paid app) | ✅ (SwiftUI) | ✅ |
-| **Terminal CLI Tool** | ✅ (`sweep`) | ✅ (`mo`) | ✅ (`puremac`) | ❌ |
-| **Menu Bar Tray Helper** | ✅ (Live RAM + Quick Clean) | ❌ | ✅ | ✅ |
-| **Trash-Safe Deletion** | ✅ (`shell.trashItem`) | ✅ (Protected paths) | ✅ (`trashItem`) | Optional |
-| **Dry Run Mode** | ✅ (GUI + `--dry-run`) | ✅ (`--dry-run`) | ✅ (`--dry-run`) | ❌ |
-| **App Uninstaller & Residue Finder** | ✅ (Deep 10-path scan) | ✅ (`mo uninstall`) | ✅ (Drag-and-drop) | ✅ |
-| **Orphaned Leftovers Hunter** | ✅ | ❌ | ✅ | ✅ |
-| **Project Build Purge (`node_modules`)** | ✅ (`sweep purge` + GUI) | ✅ (`mo purge`) | ❌ | ❌ |
-| **Duplicate File Finder (SHA-256)** | ✅ (`sweep duplicates` + GUI) | ❌ | ✅ | ✅ |
-| **App Localization Slimmer (`.lproj`)**| ✅ (`sweep slim` + GUI) | ✅ (`mo slim`) | ❌ | ✅ |
-| **Installer Cleaner (`.dmg` / `.pkg`)**| ✅ (`sweep installer` + GUI) | ✅ (`mo installer`) | ❌ | ✅ |
-| **Developer Caches (Xcode, Homebrew)** | ✅ (Comprehensive) | ✅ (Comprehensive) | ✅ (Basic) | ❌ (Minimal) |
-| **AI Model Caches (Ollama, HF, LM)** | ✅ | ❌ | ✅ | ❌ |
-| **Container Disks (Docker, Podman)** | ✅ | ✅ | ❌ | ❌ |
-| **System Maintenance (DNS, RAM)** | ✅ | ✅ | ❌ | ✅ |
-| **Background LaunchAgent Schedule** | ✅ (Daily / Weekly daemon) | ❌ | ✅ | ✅ |
-| **Directory Exclusion Whitelist** | ✅ | ❌ | ✅ | ✅ |
-| **Audit Log of Lifetime Cleaned Space**| ✅ (`~/.config/cleansweep`) | ✅ (`mo history`) | ❌ | ❌ |
+| **License** | **MIT Open Source** | Free CLI / Paid App | MIT Open Source | Commercial ($39.95/yr) |
+| **Telemetry** | **0% (None)** | 0% | 0% | Analytics & Telemetry |
+| **macOS Native UI** | Yes | CLI only / Paid App | Yes | Yes |
+| **CLI Companion** | Yes (`sweep`) | Yes (`mo`) | Yes (`puremac`) | No |
+| **Menu Bar Helper** | Yes | No | Yes | Yes |
+| **Trash-Safe Deletion** | Yes (`trashItem`) | Protected paths | Yes (`trashItem`) | Optional |
+| **Dry Run Mode** | Yes | Yes | Yes | No |
+| **App Uninstaller & Leftovers** | Yes | Yes | Yes | Yes |
+| **Orphaned Leftovers Finder** | Yes | No | Yes | Yes |
+| **Project Purger (`node_modules`)** | Yes | Yes | No | No |
+| **Duplicate Finder (SHA-256)** | Yes | No | Yes | Yes |
+| **App Localization Slimmer** | Yes | Yes | No | Yes |
+| **Developer Caches (Xcode, npm)** | Yes | Yes | Basic | Minimal |
+| **AI Caches (Ollama, HuggingFace)** | Yes | No | Yes | No |
+| **Containers (Docker Virtual Disk)** | Yes | Yes | No | No |
+| **Maintenance Routines (DNS, RAM)** | Yes | Yes | No | Yes |
+| **LaunchAgent Background Scheduler** | Yes | No | Yes | Yes |
+| **Directory Whitelist** | Yes | No | Yes | Yes |
+| **Audit History Log** | Yes | Yes | No | No |
 
 ---
 
-## 🛡️ Privacy & Safety
+## Safety
 
-- **Zero Analytics**: CleanSweep does not bundle any analytics SDKs, crash reporters, or tracking beacons. All operations occur strictly locally on your machine.
-- **Trash-First Philosophy**: Unlike command-line scripts that execute irreversible `rm -rf`, CleanSweep defaults to routing deletions through macOS Finder Trash. If you ever need an item back, open your Trash and click "Put Back".
-- **SIP & Permission Guardrails**: CleanSweep respects macOS System Integrity Protection (SIP) and sandboxing boundaries. Sensitive system files and directories are protected by default.
-- **Granting Full Disk Access (Recommended)**: To allow CleanSweep to clean protected user caches, app containers, and the user Trash bin:
-  1. Open **System Settings > Privacy & Security > Full Disk Access**.
-  2. Toggle **CleanSweep** on (or add `CleanSweep.app`).
+- **Trash Integration**: All file deletions use `shell.trashItem` (macOS Finder Trash). Cleaned files can be restored anytime before emptying Trash.
+- **System Protection**: CleanSweep adheres to macOS System Integrity Protection (SIP) boundaries and does not modify core system files.
+- **Full Disk Access**: To clean protected caches and application containers in `~/Library/Containers`, grant Full Disk Access in **System Settings > Privacy & Security > Full Disk Access**.
 
 ---
 
-## 🛠️ Development & Building from Source
+## Building from Source
 
-### Prerequisites
-- macOS 12 Monterey, macOS 13 Ventura, macOS 14 Sonoma, or macOS 15 Sequoia (Apple Silicon & Intel).
-- Node.js 18+ and npm.
-
-### Local Setup
 ```bash
-# 1. Clone the repository
+# Clone repository
 git clone https://github.com/thecodekaizen/clean-my-mac.git cleansweep
 cd cleansweep
 
-# 2. Install dependencies
+# Install dependencies
 npm install
 
-# 3. Run the automated test suite
+# Run automated tests
 npm test
 
-# 4. Run the code audit
+# Run linter
 npm run lint
 
-# 5. Start development mode with hot reload
+# Start development app with hot reload
 npm run dev
-```
 
-### Packaging Standalone macOS Application
-To compile and package the standalone `.app` and `.zip` distribution bundles:
-```bash
+# Package standalone macOS application
 npm run build
 ```
-Output files will be generated in:
-- `dist-electron/release/mac-arm64/CleanSweep.app`
-- `dist-electron/release/CleanSweep-1.0.0-arm64-mac.zip`
 
 ---
 
-## 🤝 Contributing
+## License
 
-Contributions, feature suggestions, and pull requests are warmly welcomed!
-1. Fork this repository.
-2. Create your feature branch (`git checkout -b feature/amazing-feature`).
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`).
-4. Push to the branch (`git push origin feature/amazing-feature`).
-5. Open a Pull Request.
-
----
-
-## 📄 License
-
-CleanSweep is distributed under the **MIT License**. See [LICENSE](file:///Users/thecodekaizen/Code/Projects/clean-my-mac/LICENSE) for details.
-
----
-
-<p align="center">
-  Built with ❤️ for the macOS developer community by <a href="https://github.com/thecodekaizen">Vishnu (@thecodekaizen)</a>
-</p>
+CleanSweep is open source software licensed under the [MIT License](LICENSE).

@@ -1,259 +1,245 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 700" width="100%" height="100%">
   <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#080c14"/>
-      <stop offset="50%" stop-color="#0d1424"/>
-      <stop offset="100%" stop-color="#050811"/>
-    </linearGradient>
-
-    <!-- Glowing Orbs -->
-    <radialGradient id="cyanGlow" cx="25%" cy="30%" r="50%">
-      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="indigoGlow" cx="75%" cy="70%" r="60%">
-      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
-    </radialGradient>
-
-    <!-- Glass Surface Gradient -->
-    <linearGradient id="windowGlass" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#182234" stop-opacity="0.85"/>
-      <stop offset="100%" stop-color="#0e1626" stop-opacity="0.9"/>
-    </linearGradient>
-
-    <!-- Card Background -->
-    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#1f2c42" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="#141d2e" stop-opacity="0.7"/>
-    </linearGradient>
-
-    <!-- Primary Button Gradient -->
-    <linearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#0284c7"/>
-      <stop offset="100%" stop-color="#2563eb"/>
-    </linearGradient>
-
-    <!-- Window Shadow -->
-    <filter id="winShadow" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="25" stdDeviation="35" flood-color="#000000" flood-opacity="0.65"/>
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#38bdf8" flood-opacity="0.15"/>
+    <!-- macOS Window Shadow -->
+    <filter id="macWindowShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="24" stdDeviation="32" flood-color="#000000" flood-opacity="0.55"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.3"/>
     </filter>
 
-    <clipPath id="windowClip">
-      <rect x="100" y="50" width="1000" height="580" rx="16" ry="16"/>
+    <clipPath id="macWindowClip">
+      <rect x="50" y="35" width="1060" height="630" rx="12" ry="12"/>
     </clipPath>
   </defs>
 
-  <!-- Canvas Background -->
-  <rect width="1200" height="680" fill="url(#bgGrad)"/>
-  <rect width="1200" height="680" fill="url(#cyanGlow)"/>
-  <rect width="1200" height="680" fill="url(#indigoGlow)"/>
+  <!-- Neutral Dark Studio Canvas Background -->
+  <rect width="1160" height="700" fill="#121214"/>
 
-  <!-- Subtle Grid Lines -->
-  <g stroke="#38bdf8" stroke-opacity="0.04" stroke-width="1">
-    <line x1="0" y1="120" x2="1200" y2="120"/>
-    <line x1="0" y1="240" x2="1200" y2="240"/>
-    <line x1="0" y1="360" x2="1200" y2="360"/>
-    <line x1="0" y1="480" x2="1200" y2="480"/>
-    <line x1="0" y1="600" x2="1200" y2="600"/>
-    <line x1="200" y1="0" x2="200" y2="680"/>
-    <line x1="400" y1="0" x2="400" y2="680"/>
-    <line x1="600" y1="0" x2="600" y2="680"/>
-    <line x1="800" y1="0" x2="800" y2="680"/>
-    <line x1="1000" y1="0" x2="1000" y2="680"/>
+  <!-- Native macOS Window Frame -->
+  <g filter="url(#macWindowShadow)">
+    <rect x="50" y="35" width="1060" height="630" rx="12" ry="12" fill="#1e1e1e" stroke="#38383a" stroke-width="1"/>
   </g>
 
-  <!-- macOS Window Frame -->
-  <g filter="url(#winShadow)">
-    <rect x="100" y="50" width="1000" height="580" rx="16" ry="16" fill="url(#windowGlass)" stroke="#38bdf8" stroke-opacity="0.25" stroke-width="1"/>
-  </g>
-
-  <!-- Window Contents (Clipped) -->
-  <g clip-path="url(#windowClip)" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif">
+  <!-- Window Contents -->
+  <g clip-path="url(#macWindowClip)" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', sans-serif">
     
-    <!-- Titlebar / Header -->
-    <rect x="100" y="50" width="1000" height="52" fill="#0f172a" fill-opacity="0.6"/>
-    <line x1="100" y1="102" x2="1100" y2="102" stroke="#334155" stroke-opacity="0.4" stroke-width="1"/>
+    <!-- Unified Titlebar / Toolbar (macOS Sequoia style) -->
+    <rect x="50" y="35" width="1060" height="48" fill="#181818"/>
+    <line x1="50" y1="83" x2="1110" y2="83" stroke="#28282a" stroke-width="1"/>
 
     <!-- Traffic Lights -->
-    <circle cx="128" cy="76" r="6" fill="#ff5f56"/>
-    <circle cx="148" cy="76" r="6" fill="#ffbd2e"/>
-    <circle cx="168" cy="76" r="6" fill="#27c93f"/>
+    <circle cx="74" cy="59" r="6" fill="#ff5f57" stroke="#e0443e" stroke-width="0.5"/>
+    <circle cx="94" cy="59" r="6" fill="#febc2e" stroke="#d89e24" stroke-width="0.5"/>
+    <circle cx="114" cy="59" r="6" fill="#28c840" stroke="#1aab29" stroke-width="0.5"/>
 
-    <!-- Titlebar App Badge -->
-    <text x="210" y="81" font-size="14" font-weight="700" fill="#f8fafc" letter-spacing="0.3">CleanSweep</text>
-    <rect x="295" y="68" width="56" height="18" rx="9" fill="#0284c7" fill-opacity="0.2" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="1"/>
-    <text x="323" y="81" font-size="10" font-weight="600" fill="#38bdf8" text-anchor="middle">PRO</text>
+    <!-- Toolbar Title & Search Bar -->
+    <text x="146" y="64" font-size="13" font-weight="600" fill="#ffffff" letter-spacing="-0.2">CleanSweep</text>
 
-    <!-- Top Telemetry Strip -->
-    <g transform="translate(680, 68)" font-size="11">
-      <rect x="0" y="0" width="120" height="20" rx="4" fill="#1e293b" fill-opacity="0.7"/>
-      <circle cx="10" cy="10" r="3" fill="#38bdf8"/>
-      <text x="20" y="14" fill="#94a3b8">CPU: <tspan fill="#f1f5f9" font-weight="600">6%</tspan></text>
+    <!-- Toolbar Search / Scope Bar -->
+    <g transform="translate(730, 47)">
+      <rect width="220" height="24" rx="6" fill="#242426" stroke="#333336" stroke-width="1"/>
+      <path d="M12 12 l-3 -3 m3 0 a 4 4 0 1 0 -8 0 a 4 4 0 1 0 8 0" stroke="#71717a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <text x="24" y="16" font-size="11" fill="#71717a">Filter categories...</text>
+    </g>
 
-      <rect x="130" y="0" width="135" height="20" rx="4" fill="#1e293b" fill-opacity="0.7"/>
-      <circle cx="140" cy="10" r="3" fill="#10b981"/>
-      <text x="150" y="14" fill="#94a3b8">RAM: <tspan fill="#f1f5f9" font-weight="600">14.2 GB Free</tspan></text>
-
-      <rect x="275" y="0" width="130" height="20" rx="4" fill="#1e293b" fill-opacity="0.7"/>
-      <circle cx="285" cy="10" r="3" fill="#6366f1"/>
-      <text x="295" y="14" fill="#94a3b8">Disk: <tspan fill="#f1f5f9" font-weight="600">140 GB Free</tspan></text>
+    <!-- Toolbar Quick Telemetry Pill -->
+    <g transform="translate(965, 47)">
+      <rect width="125" height="24" rx="6" fill="#242426" stroke="#333336" stroke-width="1"/>
+      <circle cx="12" cy="12" r="3.5" fill="#32d74b"/>
+      <text x="22" y="16" font-size="11" font-weight="500" fill="#d4d4d8">14.2 GB Free</text>
     </g>
 
     <!-- ================= SIDEBAR ================= -->
-    <rect x="100" y="102" width="220" height="528" fill="#0b1120" fill-opacity="0.5"/>
-    <line x1="320" y1="102" x2="320" y2="630" stroke="#334155" stroke-opacity="0.4" stroke-width="1"/>
+    <rect x="50" y="83" width="220" height="582" fill="#161617"/>
+    <line x1="270" y1="83" x2="270" y2="665" stroke="#28282a" stroke-width="1"/>
 
-    <!-- Sidebar Section: Cleaning -->
-    <text x="124" y="132" font-size="10" font-weight="700" fill="#64748b" letter-spacing="0.8">CLEANING</text>
+    <!-- Section: Clean -->
+    <text x="70" y="112" font-size="10" font-weight="600" fill="#71717a" letter-spacing="0.5">CLEANUP</text>
 
-    <!-- Sidebar Active Item: Smart Clean -->
-    <rect x="112" y="144" width="196" height="34" rx="8" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="1"/>
-    <text x="144" y="166" font-size="13" font-weight="600" fill="#f8fafc">Smart Clean</text>
-    <circle cx="128" cy="161" r="5" fill="#38bdf8"/>
-    <text x="290" y="166" font-size="11" font-weight="600" fill="#38bdf8" text-anchor="end">31 GB</text>
+    <!-- Active Item: Smart Clean (Native macOS List Selection) -->
+    <rect x="62" y="124" width="196" height="30" rx="6" fill="#0a84ff"/>
+    <path d="M78 135 l6 6 l-4 4 m-2 -2 l-4 -4" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <text x="96" y="144" font-size="12" font-weight="500" fill="#ffffff">Smart Clean</text>
+    <text x="246" y="144" font-size="11" font-weight="500" fill="#ffffff" fill-opacity="0.8" text-anchor="end">31.3 GB</text>
 
-    <!-- Sidebar Items -->
-    <g font-size="12" fill="#94a3b8" font-weight="500">
-      <text x="144" y="202">App Uninstaller</text>
-      <circle cx="128" cy="198" r="4" fill="#64748b"/>
+    <!-- Navigation Items -->
+    <g font-size="12" fill="#a1a1aa" font-weight="400">
+      <!-- App Uninstaller -->
+      <g transform="translate(62, 160)">
+        <text x="34" y="19">App Uninstaller</text>
+        <rect x="14" y="9" width="12" height="12" rx="2" stroke="#71717a" stroke-width="1.2" fill="none"/>
+      </g>
 
-      <text x="144" y="234">Project Purger</text>
-      <circle cx="128" cy="230" r="4" fill="#64748b"/>
+      <!-- Project Purger -->
+      <g transform="translate(62, 192)">
+        <text x="34" y="19">Project Purger</text>
+        <path d="M14 11 h12 v10 h-12 z M17 11 v-2 h6 v2" stroke="#71717a" stroke-width="1.2" fill="none"/>
+      </g>
 
-      <text x="144" y="266">Duplicate Finder</text>
-      <circle cx="128" cy="262" r="4" fill="#64748b"/>
+      <!-- Duplicate Finder -->
+      <g transform="translate(62, 224)">
+        <text x="34" y="19">Duplicate Finder</text>
+        <rect x="14" y="9" width="9" height="11" rx="1.5" stroke="#71717a" stroke-width="1.2" fill="none"/>
+        <rect x="18" y="12" width="9" height="11" rx="1.5" stroke="#71717a" stroke-width="1.2" fill="none"/>
+      </g>
 
-      <text x="144" y="298">App Slimmer</text>
-      <circle cx="128" cy="294" r="4" fill="#64748b"/>
+      <!-- App Slimmer -->
+      <g transform="translate(62, 256)">
+        <text x="34" y="19">App Slimmer</text>
+        <circle cx="17" cy="17" r="2.5" stroke="#71717a" stroke-width="1.2" fill="none"/>
+        <circle cx="23" cy="17" r="2.5" stroke="#71717a" stroke-width="1.2" fill="none"/>
+        <path d="M18 15 l4 -5 m-4 0 l4 5" stroke="#71717a" stroke-width="1.2"/>
+      </g>
 
-      <text x="144" y="330">Installer Packages</text>
-      <circle cx="128" cy="326" r="4" fill="#64748b"/>
+      <!-- Installer Packages -->
+      <g transform="translate(62, 288)">
+        <text x="34" y="19">Installers (.dmg)</text>
+        <circle cx="20" cy="16" r="6" stroke="#71717a" stroke-width="1.2" fill="none"/>
+        <circle cx="20" cy="16" r="2" fill="#71717a"/>
+      </g>
     </g>
 
-    <!-- Sidebar Section: Utilities -->
-    <text x="124" y="372" font-size="10" font-weight="700" fill="#64748b" letter-spacing="0.8">SYSTEM &amp; STATS</text>
+    <!-- Section: System & Tools -->
+    <text x="70" y="348" font-size="10" font-weight="600" fill="#71717a" letter-spacing="0.5">SYSTEM</text>
 
-    <g font-size="12" fill="#94a3b8" font-weight="500">
-      <text x="144" y="402">Disk Analyzer</text>
-      <circle cx="128" cy="398" r="4" fill="#64748b"/>
+    <g font-size="12" fill="#a1a1aa" font-weight="400">
+      <g transform="translate(62, 360)">
+        <text x="34" y="19">Disk Analyzer</text>
+        <circle cx="20" cy="16" r="5.5" stroke="#71717a" stroke-width="1.2" fill="none"/>
+        <path d="M20 16 l3 -2" stroke="#71717a" stroke-width="1.2"/>
+      </g>
 
-      <text x="144" y="434">System Maintenance</text>
-      <circle cx="128" cy="430" r="4" fill="#64748b"/>
+      <g transform="translate(62, 392)">
+        <text x="34" y="19">Maintenance</text>
+        <path d="M19 10 l-3 7 h4 l-1 6 l5 -8 h-4 z" stroke="#71717a" stroke-width="1.2" fill="none"/>
+      </g>
 
-      <text x="144" y="466">Startup Items</text>
-      <circle cx="128" cy="462" r="4" fill="#64748b"/>
+      <g transform="translate(62, 424)">
+        <text x="34" y="19">Startup Items</text>
+        <path d="M16 21 v-4 a4 4 0 0 1 8 0 v4 z" stroke="#71717a" stroke-width="1.2" fill="none"/>
+      </g>
 
-      <text x="144" y="498">Activity Monitor</text>
-      <circle cx="128" cy="494" r="4" fill="#64748b"/>
+      <g transform="translate(62, 456)">
+        <text x="34" y="19">Activity Monitor</text>
+        <path d="M13 16 h3 l2 -4 l3 8 l2 -4 h3" stroke="#71717a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      </g>
 
-      <text x="144" y="530">History &amp; Audit</text>
-      <circle cx="128" cy="526" r="4" fill="#64748b"/>
+      <g transform="translate(62, 488)">
+        <text x="34" y="19">Cleanup History</text>
+        <circle cx="20" cy="16" r="5.5" stroke="#71717a" stroke-width="1.2" fill="none"/>
+        <path d="M20 13 v3 h3" stroke="#71717a" stroke-width="1.2"/>
+      </g>
 
-      <text x="144" y="562">Preferences</text>
-      <circle cx="128" cy="558" r="4" fill="#64748b"/>
+      <g transform="translate(62, 520)">
+        <text x="34" y="19">Preferences</text>
+        <circle cx="20" cy="16" r="3" stroke="#71717a" stroke-width="1.2" fill="none"/>
+        <circle cx="20" cy="16" r="6" stroke="#71717a" stroke-width="1.2" stroke-dasharray="2 2" fill="none"/>
+      </g>
     </g>
 
-    <!-- ================= MAIN CONTENT ================= -->
-    <!-- Hero Banner Card -->
-    <g transform="translate(345, 122)">
-      <rect width="730" height="110" rx="14" fill="url(#cardGrad)" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1"/>
-      
-      <!-- Sparkle Icon -->
-      <circle cx="50" cy="55" r="28" fill="#0284c7" fill-opacity="0.25"/>
-      <path d="M50 38 L54 49 L65 53 L54 57 L50 68 L46 57 L35 53 L46 49 Z" fill="#38bdf8"/>
-
-      <text x="95" y="48" font-size="19" font-weight="700" fill="#ffffff">Smart Clean Ready</text>
-      <text x="95" y="70" font-size="13" fill="#94a3b8">Scan finished in 182ms. Found <tspan fill="#38bdf8" font-weight="600">31.33 GB</tspan> of safe reclaimable caches.</text>
-      <text x="95" y="88" font-size="11" fill="#64748b">Protected by macOS trash-first deletion safety guarantee</text>
-
-      <!-- Clean Button -->
-      <rect x="560" y="35" width="145" height="40" rx="10" fill="url(#btnGrad)"/>
-      <text x="632" y="60" font-size="13" font-weight="600" fill="#ffffff" text-anchor="middle">Clean 31.33 GB</text>
+    <!-- Sidebar Bottom: Status -->
+    <g transform="translate(70, 620)">
+      <circle cx="6" cy="6" r="3.5" fill="#32d74b"/>
+      <text x="16" y="10" font-size="11" font-weight="500" fill="#a1a1aa">Zero Telemetry Active</text>
     </g>
 
-    <!-- Category Columns Grid -->
-    <!-- Card 1: System Junk -->
-    <g transform="translate(345, 248)">
-      <rect width="232" height="175" rx="12" fill="url(#cardGrad)" stroke="#334155" stroke-opacity="0.4" stroke-width="1"/>
-      <rect x="16" y="16" width="36" height="36" rx="8" fill="#3b82f6" fill-opacity="0.2"/>
-      <text x="34" y="39" font-size="16" text-anchor="middle" fill="#60a5fa">🖥️</text>
-      <text x="62" y="32" font-size="14" font-weight="600" fill="#ffffff">System &amp; Apps</text>
-      <text x="62" y="47" font-size="11" fill="#64748b">Caches &amp; logs</text>
+    <!-- ================= MAIN CONTENT PANE ================= -->
+    <rect x="270" y="83" width="840" height="582" fill="#1e1e1e"/>
 
-      <text x="16" y="85" font-size="22" font-weight="700" fill="#38bdf8">6.49 GB</text>
-      <text x="16" y="103" font-size="11" fill="#94a3b8">User Caches: 6.49 GB</text>
-      <text x="16" y="119" font-size="11" fill="#94a3b8">Diagnostic Reports: 0 B</text>
-      <text x="16" y="135" font-size="11" fill="#94a3b8">Thumbnail Cache: Clean</text>
-      
-      <!-- Checkmark Pill -->
-      <rect x="16" y="145" width="68" height="18" rx="9" fill="#10b981" fill-opacity="0.15"/>
-      <text x="50" y="158" font-size="10" font-weight="600" fill="#34d399" text-anchor="middle">✓ Selected</text>
+    <!-- Header Summary Block -->
+    <g transform="translate(305, 110)">
+      <text x="0" y="24" font-size="20" font-weight="600" fill="#ffffff" letter-spacing="-0.3">Smart Clean</text>
+      <text x="0" y="44" font-size="13" fill="#8e8e93">Scan completed. 15 items selected across system, developer, and application caches.</text>
+
+      <!-- Primary Action Button (Native macOS Blue Fill) -->
+      <g transform="translate(635, 8)">
+        <rect width="135" height="34" rx="6" fill="#0a84ff"/>
+        <text x="67" y="22" font-size="13" font-weight="600" fill="#ffffff" text-anchor="middle">Clean 31.33 GB</text>
+      </g>
     </g>
 
-    <!-- Card 2: Developer & Build -->
-    <g transform="translate(594, 248)">
-      <rect width="232" height="175" rx="12" fill="url(#cardGrad)" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1"/>
-      <rect x="16" y="16" width="36" height="36" rx="8" fill="#f59e0b" fill-opacity="0.2"/>
-      <text x="34" y="39" font-size="16" text-anchor="middle" fill="#fbbf24">🏗️</text>
-      <text x="62" y="32" font-size="14" font-weight="600" fill="#ffffff">Developer &amp; Build</text>
-      <text x="62" y="47" font-size="11" fill="#64748b">Package managers &amp; runtimes</text>
+    <!-- Target Category List / Table -->
+    <g transform="translate(305, 180)">
+      <!-- Table Header -->
+      <rect width="770" height="28" rx="4" fill="#242426"/>
+      <text x="16" y="18" font-size="11" font-weight="600" fill="#71717a">CATEGORY &amp; TARGETS</text>
+      <text x="490" y="18" font-size="11" font-weight="600" fill="#71717a">LOCATION</text>
+      <text x="750" y="18" font-size="11" font-weight="600" fill="#71717a" text-anchor="end">RECLAIMABLE</text>
 
-      <text x="16" y="85" font-size="22" font-weight="700" fill="#fbbf24">15.42 GB</text>
-      <text x="16" y="103" font-size="11" fill="#94a3b8">npm / pnpm / Bun: 4.94 GB</text>
-      <text x="16" y="119" font-size="11" fill="#94a3b8">Python uv / Pip: 3.61 GB</text>
-      <text x="16" y="135" font-size="11" fill="#94a3b8">Gradle &amp; Homebrew: 3.81 GB</text>
+      <!-- Row 1: System Caches -->
+      <g transform="translate(0, 36)">
+        <rect width="770" height="52" rx="6" fill="#242426" stroke="#2d2d30" stroke-width="1"/>
+        <rect x="16" y="18" width="16" height="16" rx="4" fill="#0a84ff"/>
+        <path d="M20 26 l2.5 2.5 l5 -5" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="44" y="28" font-size="13" font-weight="500" fill="#ffffff">User Application Caches</text>
+        <text x="44" y="42" font-size="11" fill="#71717a">Cached data, temporary files, and WebKit storage</text>
+        <text x="490" y="32" font-size="11" font-family="monospace" fill="#8e8e93">~/Library/Caches</text>
+        <text x="754" y="33" font-size="13" font-weight="600" fill="#ffffff" text-anchor="end">6.49 GB</text>
+      </g>
 
-      <!-- Checkmark Pill -->
-      <rect x="16" y="145" width="68" height="18" rx="9" fill="#10b981" fill-opacity="0.15"/>
-      <text x="50" y="158" font-size="10" font-weight="600" fill="#34d399" text-anchor="middle">✓ Selected</text>
+      <!-- Row 2: Developer npm -->
+      <g transform="translate(0, 96)">
+        <rect width="770" height="52" rx="6" fill="#242426" stroke="#2d2d30" stroke-width="1"/>
+        <rect x="16" y="18" width="16" height="16" rx="4" fill="#0a84ff"/>
+        <path d="M20 26 l2.5 2.5 l5 -5" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="44" y="28" font-size="13" font-weight="500" fill="#ffffff">npm Global Cache</text>
+        <text x="44" y="42" font-size="11" fill="#71717a">Content-addressable tarball and index cache (_cacache)</text>
+        <text x="490" y="32" font-size="11" font-family="monospace" fill="#8e8e93">~/.npm/_cacache</text>
+        <text x="754" y="33" font-size="13" font-weight="600" fill="#ffffff" text-anchor="end">4.94 GB</text>
+      </g>
+
+      <!-- Row 3: Python uv / pip -->
+      <g transform="translate(0, 156)">
+        <rect width="770" height="52" rx="6" fill="#242426" stroke="#2d2d30" stroke-width="1"/>
+        <rect x="16" y="18" width="16" height="16" rx="4" fill="#0a84ff"/>
+        <path d="M20 26 l2.5 2.5 l5 -5" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="44" y="28" font-size="13" font-weight="500" fill="#ffffff">uv Python Package Cache</text>
+        <text x="44" y="42" font-size="11" fill="#71717a">Prebuilt wheels and zip archives</text>
+        <text x="490" y="32" font-size="11" font-family="monospace" fill="#8e8e93">~/.cache/uv</text>
+        <text x="754" y="33" font-size="13" font-weight="600" fill="#ffffff" text-anchor="end">3.05 GB</text>
+      </g>
+
+      <!-- Row 4: Gradle Build Daemon -->
+      <g transform="translate(0, 216)">
+        <rect width="770" height="52" rx="6" fill="#242426" stroke="#2d2d30" stroke-width="1"/>
+        <rect x="16" y="18" width="16" height="16" rx="4" fill="#0a84ff"/>
+        <path d="M20 26 l2.5 2.5 l5 -5" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="44" y="28" font-size="13" font-weight="500" fill="#ffffff">Gradle Build Cache</text>
+        <text x="44" y="42" font-size="11" fill="#71717a">Downloaded artifacts and compilation cache</text>
+        <text x="490" y="32" font-size="11" font-family="monospace" fill="#8e8e93">~/.gradle/caches</text>
+        <text x="754" y="33" font-size="13" font-weight="600" fill="#ffffff" text-anchor="end">3.20 GB</text>
+      </g>
+
+      <!-- Row 5: AI Models -->
+      <g transform="translate(0, 276)">
+        <rect width="770" height="52" rx="6" fill="#242426" stroke="#2d2d30" stroke-width="1"/>
+        <rect x="16" y="18" width="16" height="16" rx="4" fill="#0a84ff"/>
+        <path d="M20 26 l2.5 2.5 l5 -5" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="44" y="28" font-size="13" font-weight="500" fill="#ffffff">HuggingFace Hub Cache</text>
+        <text x="44" y="42" font-size="11" fill="#71717a">Snapshot model weights and tokenizer configs</text>
+        <text x="490" y="32" font-size="11" font-family="monospace" fill="#8e8e93">~/.cache/huggingface</text>
+        <text x="754" y="33" font-size="13" font-weight="600" fill="#ffffff" text-anchor="end">4.10 GB</text>
+      </g>
+
+      <!-- Row 6: Google Chrome -->
+      <g transform="translate(0, 336)">
+        <rect width="770" height="52" rx="6" fill="#242426" stroke="#2d2d30" stroke-width="1"/>
+        <rect x="16" y="18" width="16" height="16" rx="4" fill="#0a84ff"/>
+        <path d="M20 26 l2.5 2.5 l5 -5" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <text x="44" y="28" font-size="13" font-weight="500" fill="#ffffff">Google Chrome Cache</text>
+        <text x="44" y="42" font-size="11" fill="#71717a">Web disk cache, code cache, and media cache</text>
+        <text x="490" y="32" font-size="11" font-family="monospace" fill="#8e8e93">~/Library/Caches/Google/Chrome</text>
+        <text x="754" y="33" font-size="13" font-weight="600" fill="#ffffff" text-anchor="end">1.40 GB</text>
+      </g>
     </g>
 
-    <!-- Card 3: AI Models & Weights -->
-    <g transform="translate(843, 248)">
-      <rect width="232" height="175" rx="12" fill="url(#cardGrad)" stroke="#334155" stroke-opacity="0.4" stroke-width="1"/>
-      <rect x="16" y="16" width="36" height="36" rx="8" fill="#8b5cf6" fill-opacity="0.2"/>
-      <text x="34" y="39" font-size="16" text-anchor="middle" fill="#a78bfa">🤖</text>
-      <text x="62" y="32" font-size="14" font-weight="600" fill="#ffffff">AI &amp; Local Models</text>
-      <text x="62" y="47" font-size="11" fill="#64748b">Ollama, HuggingFace, LM</text>
-
-      <text x="16" y="85" font-size="22" font-weight="700" fill="#c084fc">7.22 GB</text>
-      <text x="16" y="103" font-size="11" fill="#94a3b8">HuggingFace Hub: 4.1 GB</text>
-      <text x="16" y="119" font-size="11" fill="#94a3b8">Ollama Blobs: 3.12 GB</text>
-      <text x="16" y="135" font-size="11" fill="#94a3b8">LM Studio: Clean</text>
-
-      <!-- Checkmark Pill -->
-      <rect x="16" y="145" width="68" height="18" rx="9" fill="#10b981" fill-opacity="0.15"/>
-      <text x="50" y="158" font-size="10" font-weight="600" fill="#34d399" text-anchor="middle">✓ Selected</text>
-    </g>
-
-    <!-- Bottom Row: Browsers & Containers -->
-    <!-- Card 4: Browsers -->
-    <g transform="translate(345, 438)">
-      <rect width="356" height="165" rx="12" fill="url(#cardGrad)" stroke="#334155" stroke-opacity="0.4" stroke-width="1"/>
-      <rect x="16" y="16" width="36" height="36" rx="8" fill="#10b981" fill-opacity="0.2"/>
-      <text x="34" y="39" font-size="16" text-anchor="middle" fill="#34d399">🌐</text>
-      <text x="62" y="32" font-size="14" font-weight="600" fill="#ffffff">Web Browsers</text>
-      <text x="62" y="47" font-size="11" fill="#64748b">Chrome, Arc, Safari, Edge, Firefox</text>
-
-      <text x="16" y="85" font-size="22" font-weight="700" fill="#34d399">2.20 GB</text>
-      <text x="16" y="106" font-size="12" fill="#94a3b8">Chrome: <tspan fill="#f1f5f9">1.40 GB</tspan> | Arc: <tspan fill="#f1f5f9">804 MB</tspan> | Safari: <tspan fill="#f1f5f9">22 MB</tspan></text>
-      <text x="16" y="126" font-size="11" fill="#64748b">Preserves cookies, active logins, history, and bookmarks</text>
-    </g>
-
-    <!-- Card 5: App Slimmer & Leftovers -->
-    <g transform="translate(719, 438)">
-      <rect width="356" height="165" rx="12" fill="url(#cardGrad)" stroke="#334155" stroke-opacity="0.4" stroke-width="1"/>
-      <rect x="16" y="16" width="36" height="36" rx="8" fill="#ec4899" fill-opacity="0.2"/>
-      <text x="34" y="39" font-size="16" text-anchor="middle" fill="#f472b6">✂️</text>
-      <text x="62" y="32" font-size="14" font-weight="600" fill="#ffffff">App Slimmer &amp; Installers</text>
-      <text x="62" y="47" font-size="11" fill="#64748b">Foreign language packs (.lproj) &amp; .dmg</text>
-
-      <text x="16" y="85" font-size="22" font-weight="700" fill="#f472b6">42.75 MB</text>
-      <text x="16" y="106" font-size="12" fill="#94a3b8">8 Apps with unneeded localization packs</text>
-      <text x="16" y="126" font-size="11" fill="#64748b">Zoom (25MB), WhatsApp (14MB), Chrome (78KB)</text>
+    <!-- Bottom Footer Notice -->
+    <g transform="translate(305, 626)">
+      <text x="0" y="10" font-size="11" fill="#71717a">
+        Items will be moved to macOS Trash. Restorable anytime before emptying trash.
+      </text>
+      <text x="770" y="10" font-size="11" font-weight="500" fill="#0a84ff" text-anchor="end">
+        Preferences &amp; Whitelist →
+      </text>
     </g>
 
   </g>

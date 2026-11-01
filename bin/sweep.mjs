@@ -38,7 +38,7 @@ const c = {
 };
 
 function printBanner() {
-  console.log(`\n${c.bold}${c.cyan}🧹 CleanSweep${c.reset} ${c.dim}— The zero-telemetry macOS optimizer${c.reset}\n`);
+  console.log(`\n${c.bold}CleanSweep${c.reset} ${c.dim}1.0.0 — macOS disk cleaner & optimizer${c.reset}\n`);
 }
 
 function printHelp() {
@@ -462,19 +462,20 @@ async function handleOptimize() {
 
 async function handleInteractiveMenu() {
   printBanner();
-  console.log(`${c.bold}Select an operation:${c.reset}\n`);
-  console.log(`  ${c.cyan}1${c.reset} - 🧹 Smart Clean (System & Developer Caches)`);
-  console.log(`  ${c.cyan}2${c.reset} - 🏗️  Purge Project Artifacts (node_modules, target, .venv)`);
-  console.log(`  ${c.cyan}3${c.reset} - ♊ Duplicate File Finder (SHA-256 match)`);
-  console.log(`  ${c.cyan}4${c.reset} - ✂️  App Localization Slimmer (Strip unused languages)`);
-  console.log(`  ${c.cyan}5${c.reset} - 💿 Downloaded Installer Cleaner (.dmg/.pkg)`);
-  console.log(`  ${c.cyan}6${c.reset} - 📦 Inspect Installed Apps & Leftovers`);
-  console.log(`  ${c.cyan}7${c.reset} - ⚡ Run System Maintenance (Flush DNS, purge RAM)`);
-  console.log(`  ${c.cyan}8${c.reset} - 📊 System Health & Activity Dashboard`);
-  console.log(`  ${c.cyan}9${c.reset} - 📂 Analyze Large & Old Files`);
-  console.log(`  ${c.cyan}h${c.reset} - 📜 View Cleanup History & Lifetime Stats`);
-  console.log(`  ${c.cyan}u${c.reset} - 🔄 Check for Updates`);
-  console.log(`  ${c.cyan}0${c.reset} - Exit\n`);
+  console.log(`${c.bold}Operations:${c.reset}\n`);
+  console.log(`  ${c.bold}1${c.reset}  ${'Smart Clean'.padEnd(20)} ${c.dim}System, browser, and developer caches${c.reset}`);
+  console.log(`  ${c.bold}2${c.reset}  ${'Purge Artifacts'.padEnd(20)} ${c.dim}node_modules, target, .venv in code projects${c.reset}`);
+  console.log(`  ${c.bold}3${c.reset}  ${'Duplicate Files'.padEnd(20)} ${c.dim}SHA-256 cryptographic duplicate detection${c.reset}`);
+  console.log(`  ${c.bold}4${c.reset}  ${'Slim Apps'.padEnd(20)} ${c.dim}Strip unused foreign language packs (.lproj)${c.reset}`);
+  console.log(`  ${c.bold}5${c.reset}  ${'Clean Installers'.padEnd(20)} ${c.dim}Remove leftover .dmg and .pkg packages${c.reset}`);
+  console.log(`  ${c.bold}6${c.reset}  ${'App Uninstaller'.padEnd(20)} ${c.dim}Inspect applications and residual leftovers${c.reset}`);
+  console.log(`  ${c.bold}7${c.reset}  ${'Maintenance'.padEnd(20)} ${c.dim}Flush DNS, purge RAM, rebuild services${c.reset}`);
+  console.log(`  ${c.bold}8${c.reset}  ${'System Status'.padEnd(20)} ${c.dim}Hardware telemetry, RAM, and disk metrics${c.reset}`);
+  console.log(`  ${c.bold}9${c.reset}  ${'Large Files'.padEnd(20)} ${c.dim}Find large and old files taking up space${c.reset}`);
+  console.log(`  ${c.bold}h${c.reset}  ${'History'.padEnd(20)} ${c.dim}Lifetime reclaimed space and operation logs${c.reset}`);
+  console.log(`  ${c.bold}s${c.reset}  ${'Schedule'.padEnd(20)} ${c.dim}Manage background LaunchAgent auto-clean daemon${c.reset}`);
+  console.log(`  ${c.bold}u${c.reset}  ${'Update'.padEnd(20)} ${c.dim}Check for latest CleanSweep updates${c.reset}`);
+  console.log(`  ${c.bold}0${c.reset}  ${'Exit'.padEnd(20)}\n`);
 
   const rl = readline.createInterface({
     input: process.stdin,
@@ -495,6 +496,7 @@ async function handleInteractiveMenu() {
       case '8': await handleStatus(); break;
       case '9': await handleAnalyze(); break;
       case 'h': case 'H': await handleHistory(); break;
+      case 's': case 'S': await handleSchedule(); break;
       case 'u': case 'U': await handleUpdate(); break;
       default: console.log('Exiting CleanSweep.'); break;
     }
