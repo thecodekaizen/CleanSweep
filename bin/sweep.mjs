@@ -519,7 +519,7 @@ async function handleUpdate() {
   if (!isGitRepo) {
     console.log(`${c.yellow}Installed outside a local git repository.${c.reset}`);
     console.log(`To update, run the official installer:`);
-    console.log(`  ${c.cyan}curl -fsSL https://raw.githubusercontent.com/thecodekaizen/clean-my-mac/main/install.sh | bash${c.reset}\n`);
+    console.log(`  ${c.cyan}curl -fsSL https://raw.githubusercontent.com/thecodekaizen/CleanSweep/main/install.sh | bash${c.reset}\n`);
     return;
   }
   

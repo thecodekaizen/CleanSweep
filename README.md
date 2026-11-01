@@ -9,10 +9,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/thecodekaizen/clean-my-mac/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/thecodekaizen/clean-my-mac/ci.yml?branch=main&label=Build&style=flat-square" alt="Build Status" />
+  <a href="https://github.com/thecodekaizen/CleanSweep/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/thecodekaizen/CleanSweep/ci.yml?branch=main&label=Build&style=flat-square" alt="Build Status" />
   </a>
-  <a href="https://github.com/thecodekaizen/clean-my-mac/blob/main/LICENSE">
+  <a href="https://github.com/thecodekaizen/CleanSweep/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License" />
   </a>
   <img src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%26%20Intel-black.svg?style=flat-square" alt="macOS" />
@@ -55,7 +55,7 @@ CleanSweep is a native macOS application and command-line utility built for deve
 Install the `sweep` CLI globally via the official install script:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/thecodekaizen/clean-my-mac/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/thecodekaizen/CleanSweep/main/install.sh | bash
 ```
 
 Run the interactive terminal interface:
@@ -65,7 +65,7 @@ sweep
 
 ### Desktop Application
 
-Download the precompiled `CleanSweep-1.0.0-arm64-mac.zip` from [GitHub Releases](https://github.com/thecodekaizen/clean-my-mac/releases), unpack it, and drag `CleanSweep.app` into `/Applications`.
+Download the precompiled `CleanSweep-1.0.0-arm64-mac.zip` from [GitHub Releases](https://github.com/thecodekaizen/CleanSweep/releases), unpack it, and drag `CleanSweep.app` into `/Applications`.
 
 ---
 
@@ -250,8 +250,8 @@ sweep history
 
 ```bash
 # Clone repository
-git clone https://github.com/thecodekaizen/clean-my-mac.git cleansweep
-cd cleansweep
+git clone https://github.com/thecodekaizen/CleanSweep.git
+cd CleanSweep
 
 # Install dependencies
 npm install

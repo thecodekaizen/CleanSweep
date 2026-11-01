@@ -38,7 +38,7 @@ if [ "$NODE_VERSION" -lt 18 ]; then
 fi
 
 INSTALL_DIR="${HOME}/.cleansweep"
-REPO_URL="https://github.com/thecodekaizen/clean-my-mac.git"
+REPO_URL="https://github.com/thecodekaizen/CleanSweep.git"
 
 # 3. Clone or update repository
 if [ -d "$INSTALL_DIR/.git" ]; then
