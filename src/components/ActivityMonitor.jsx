@@ -214,8 +214,8 @@ export default function ActivityMonitor({ metrics, refreshMetrics }) {
             )}
             <div className="activity-meta-list mt-3">
               <div className="activity-meta-item">
-                <span>System Host:</span>
-                <strong>{metrics?.hostname || 'macOS'}</strong>
+                <span>Operating System:</span>
+                <strong>macOS ({metrics?.arch || 'arm64'})</strong>
               </div>
               <div className="activity-meta-item">
                 <span>Kernel Release:</span>

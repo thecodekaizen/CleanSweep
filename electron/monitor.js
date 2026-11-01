@@ -84,10 +84,13 @@ async function getMemoryStats() {
   return {
     totalBytes,
     totalFormatted: formatBytes(totalBytes),
+    totalMb: Math.round(totalBytes / (1024 * 1024)),
     usedBytes,
     usedFormatted: formatBytes(usedBytes),
+    usedMb: Math.round(usedBytes / (1024 * 1024)),
     freeBytes,
     freeFormatted: formatBytes(freeBytes),
+    freeMb: Math.round(freeBytes / (1024 * 1024)),
     usedPercent,
     activeFormatted: formatBytes(activeBytes),
     inactiveFormatted: formatBytes(inactiveBytes),
@@ -177,7 +180,7 @@ async function getLiveSystemHealth() {
     disk,
     battery,
     uptimeSeconds: os.uptime(),
-    hostname: os.hostname(),
+    hostname: 'Mac',
     platform: 'macOS',
     arch: os.arch(),
     release: os.release()

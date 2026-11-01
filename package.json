@@ -2,7 +2,7 @@
   "name": "cleansweep",
   "version": "1.0.0",
   "description": "Fast, zero-telemetry macOS optimizer, app uninstaller, and disk cleaning suite with CLI companion.",
-  "author": "Vishnu <thecodekaizen>",
+  "author": "CleanSweep Contributors",
   "license": "MIT",
   "main": "dist-electron/main.js",
   "bin": {

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="#000000">
+  <!-- Top-left sparkle star -->
+  <path d="M7 3 C7 5.5 8.5 7 11.5 7 C8.5 7 7 8.5 7 11 C7 8.5 5.5 7 2.5 7 C5.5 7 7 5.5 7 3 Z"/>
+  <circle cx="3.5" cy="11" r="1.2"/>
+
+  <!-- Handle (angled) -->
+  <line x1="29" y1="6" x2="18" y2="17" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Collar / Band -->
+  <polygon points="15,16 19,12 21.5,14.5 17.5,18.5"/>
+
+  <!-- Bristle 1 (Outer Left) -->
+  <polygon points="15,18 7,24.5 8,27 11,27.2 16,19"/>
+
+  <!-- Bristle 2 (Center) -->
+  <polygon points="16.5,19 12,27.5 14.5,28.5 18,20"/>
+
+  <!-- Bristle 3 (Outer Right) -->
+  <polygon points="18.5,19.5 16,28.5 18.5,29 20.5,20.5"/>
+</svg>

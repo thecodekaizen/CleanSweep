@@ -42,11 +42,17 @@
     <!-- CleanSweep Menu Bar Tray Item (Active) -->
     <g transform="translate(370, 3)">
       <rect width="95" height="26" rx="5" fill="#27272a"/>
-      <!-- Broom Icon -->
-      <path d="M12 18 l-4 -4 m2 2 l-4 -4 m6 4 l-4 -4" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
-      <circle cx="16" cy="6" r="1.5" fill="#ffffff"/>
+      <!-- Solid Broom Icon matching native template -->
+      <g transform="translate(7, 5) scale(0.44)">
+        <path d="M7 3 C7 5.5 8.5 7 11.5 7 C8.5 7 7 8.5 7 11 C7 8.5 5.5 7 2.5 7 C5.5 7 7 5.5 7 3 Z" fill="#ffffff"/>
+        <line x1="29" y1="6" x2="18" y2="17" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+        <polygon points="15,16 19,12 21.5,14.5 17.5,18.5" fill="#ffffff"/>
+        <polygon points="15,18 7,24.5 8,27 11,27.2 16,19" fill="#ffffff"/>
+        <polygon points="16.5,19 12,27.5 14.5,28.5 18,20" fill="#ffffff"/>
+        <polygon points="18.5,19.5 16,28.5 18.5,29 20.5,20.5" fill="#ffffff"/>
+      </g>
       <!-- Free RAM Text -->
-      <text x="24" y="17" font-size="12" font-weight="500" fill="#ffffff">14.2 GB</text>
+      <text x="26" y="17" font-size="12" font-weight="500" fill="#ffffff">14.2 GB</text>
     </g>
 
     <!-- Dropdown Menu -->

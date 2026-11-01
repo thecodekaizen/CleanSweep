@@ -6,10 +6,12 @@
  */
 
 import path from 'path';
+import os from 'os';
 import readline from 'readline';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
+const sanitizePath = (p) => (p || '').replace(os.homedir(), '~');
 const { scanSystem, cleanSystem } = require('../electron/scanner.js');
 const { scanInstalledApps, uninstallApp } = require('../electron/uninstaller.js');
 const { scanLargeAndOldFiles } = require('../electron/analyzer.js');
@@ -80,7 +82,7 @@ async function handleStatus() {
   printBanner();
   console.log(`${c.bold}Hardware & Operating System:${c.reset}`);
   console.log(`  Model:     ${c.cyan}${metrics.cpu.model}${c.reset} (${metrics.cpu.cores} cores)`);
-  console.log(`  Host:      ${metrics.hostname} (macOS Darwin ${metrics.release})`);
+  console.log(`  System:    macOS Darwin ${metrics.release} (${metrics.arch})`);
   console.log(`  Uptime:    ${Math.floor(metrics.uptimeSeconds / 3600)}h ${Math.floor((metrics.uptimeSeconds % 3600) / 60)}m\n`);
 
   console.log(`${c.bold}CPU & Memory:${c.reset}`);
@@ -170,7 +172,7 @@ async function handlePurge() {
   console.log(`\r${c.bold}Rebuildable Build Artifacts:${c.reset} ${c.yellow}${result.totalFormatted}${c.reset} across ${result.totalCount} project folders\n`);
 
   result.artifacts.slice(0, 25).forEach(art => {
-    console.log(`  ${c.cyan}•${c.reset} ${art.projectName.padEnd(25)} ${c.dim}[${art.artifactType}]${c.reset}  ${c.green}${art.sizeFormatted.padEnd(10)}${c.reset} ${c.dim}${art.path}${c.reset}`);
+    console.log(`  ${c.cyan}•${c.reset} ${art.projectName.padEnd(25)} ${c.dim}[${art.artifactType}]${c.reset}  ${c.green}${art.sizeFormatted.padEnd(10)}${c.reset} ${c.dim}${sanitizePath(art.path)}${c.reset}`);
   });
 
   if (result.artifacts.length === 0) {
@@ -208,9 +210,9 @@ async function handleDuplicates() {
 
   result.groups.slice(0, 20).forEach(group => {
     console.log(`  ${c.cyan}Group [${group.sizeFormatted}]:${c.reset}`);
-    console.log(`    ${c.green}Original:${c.reset}  ${group.original.path}`);
+    console.log(`    ${c.green}Original:${c.reset}  ${sanitizePath(group.original.path)}`);
     group.duplicates.forEach(d => {
-      console.log(`    ${c.red}Duplicate:${c.reset} ${d.path}`);
+      console.log(`    ${c.red}Duplicate:${c.reset} ${sanitizePath(d.path)}`);
     });
   });
 
@@ -280,11 +282,11 @@ async function handleUninstall() {
 
   console.log(`\n${c.bold}Target Application Found:${c.reset}`);
   console.log(`  Name:         ${c.cyan}${match.name}${c.reset} (v${match.version})`);
-  console.log(`  App Bundle:   ${match.appPath} (${match.appSizeFormatted})`);
+  console.log(`  App Bundle:   ${sanitizePath(match.appPath)} (${match.appSizeFormatted})`);
   console.log(`  Leftovers:    ${match.associatedFiles.length} file(s) (${match.associatedFormatted})`);
 
   match.associatedFiles.forEach(f => {
-    console.log(`    ${c.dim}-${c.reset} [${f.type}] ${f.path}`);
+    console.log(`    ${c.dim}-${c.reset} [${f.type}] ${sanitizePath(f.path)}`);
   });
 
   await uninstallApp(match.appPath, match.associatedFiles.map(f => f.path), { useTrash: true });
@@ -386,7 +388,7 @@ async function handleInstaller() {
   console.log(`\r${c.bold}Installer Packages Found (.dmg / .pkg / .iso):${c.reset} ${c.yellow}${result.totalFormatted}${c.reset} in ${result.totalCount} packages\n`);
 
   result.installers.forEach(inst => {
-    console.log(`  ${c.cyan}•${c.reset} ${inst.name.padEnd(36)} ${c.bold}${inst.sizeFormatted.padEnd(10)}${c.reset} ${c.dim}[${inst.ageDays}d old] ${inst.path}${c.reset}`);
+    console.log(`  ${c.cyan}•${c.reset} ${inst.name.padEnd(36)} ${c.bold}${inst.sizeFormatted.padEnd(10)}${c.reset} ${c.dim}[${inst.ageDays}d old] ${sanitizePath(inst.path)}${c.reset}`);
   });
 
   if (result.installers.length === 0) {
@@ -552,7 +554,7 @@ async function handleSchedule() {
     if (res.success) {
       if (res.enabled) {
         console.log(`${c.green}✓ CleanSweep automated background cleaning enabled (${res.frequency}).${c.reset}`);
-        console.log(`  Installed daemon: ${c.dim}${res.plistPath}${c.reset}\n`);
+        console.log(`  Installed daemon: ${c.dim}${sanitizePath(res.plistPath)}${c.reset}\n`);
       } else {
         console.log(`${c.yellow}✓ CleanSweep background schedule disabled.${c.reset}\n`);
       }
@@ -564,7 +566,7 @@ async function handleSchedule() {
     console.log(`${c.bold}Automated Background Schedule Status:${c.reset}`);
     console.log(`  Active:    ${status.enabled ? c.green + 'Enabled' + c.reset : c.dim + 'Disabled' + c.reset}`);
     console.log(`  Frequency: ${c.cyan}${status.frequency}${c.reset}`);
-    console.log(`  Daemon:    ${c.dim}${status.plistPath}${c.reset}\n`);
+    console.log(`  Daemon:    ${c.dim}${sanitizePath(status.plistPath)}${c.reset}\n`);
     console.log(`To change schedule:`);
     console.log(`  ${c.green}sweep schedule daily${c.reset}   — Run cleanup every 24 hours`);
     console.log(`  ${c.green}sweep schedule weekly${c.reset}  — Run cleanup every 7 days`);
