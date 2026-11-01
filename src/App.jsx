@@ -1,286 +1,312 @@
-import { useState, useEffect } from 'react'
-import { HardDrive, Trash2, Activity, Settings, AlertCircle, CheckCircle2, ChevronRight, Monitor } from 'lucide-react'
-import './index.css'
+import { useState, useEffect, useCallback } from 'react';
+import { 
+  Monitor, 
+  Sparkles, 
+  Trash2, 
+  Files, 
+  Zap, 
+  Rocket, 
+  Activity, 
+  ShieldCheck,
+  FolderArchive,
+  Copy
+} from 'lucide-react';
+import Dashboard from './components/Dashboard';
+import SmartClean from './components/SmartClean';
+import AppUninstaller from './components/AppUninstaller';
+import LargeFiles from './components/LargeFiles';
+import Optimizer from './components/Optimizer';
+import StartupItems from './components/StartupItems';
+import ActivityMonitor from './components/ActivityMonitor';
+import ProjectPurger from './components/ProjectPurger';
+import DuplicateFinder from './components/DuplicateFinder';
+import './index.css';
 
-function formatBytes(bytes) {
-  if (!bytes || bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function App() {
+export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [scanStatus, setScanStatus] = useState('idle'); // idle, scanning, result, cleaning, done
-  const [scanData, setScanData] = useState(null);
-  const [cleanResult, setCleanResult] = useState(null);
-  const [selectedIds, setSelectedIds] = useState(new Set());
-  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [metrics, setMetrics] = useState(null);
+  const [optimizing, setOptimizing] = useState(false);
 
-  const handleScan = async () => {
-    setScanStatus('scanning');
+  // Smart Clean State
+  const [scanStatus, setScanStatus] = useState('idle'); // idle | scanning | result | cleaning | done
+  const [scanData, setScanData] = useState(null);
+  const [scanProgress, setScanProgress] = useState(null);
+  const [cleanResult, setCleanResult] = useState(null);
+
+  const fetchMetrics = useCallback(async () => {
     try {
-      if (window.electronAPI) {
-        const data = await window.electronAPI.scanSystem();
+      if (window.cleanSweepAPI?.getSystemMetrics) {
+        const data = await window.cleanSweepAPI.getSystemMetrics();
+        setMetrics(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch system metrics:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 10000);
+    return () => clearInterval(interval);
+  }, [fetchMetrics]);
+
+  // Subscribe to scanning progress events
+  useEffect(() => {
+    if (window.cleanSweepAPI?.onScanProgress) {
+      const unsub = window.cleanSweepAPI.onScanProgress((prog) => {
+        setScanProgress(prog);
+      });
+      return () => unsub();
+    }
+  }, []);
+
+  const handleStartScan = async () => {
+    setActiveTab('smart-clean');
+    setScanStatus('scanning');
+    setScanProgress(null);
+    try {
+      if (window.cleanSweepAPI?.scanSystem) {
+        const data = await window.cleanSweepAPI.scanSystem();
         setScanData(data);
-        const initialSelected = new Set(data.items.filter(i => i.defaultChecked).map(i => i.id));
-        setSelectedIds(initialSelected);
-        setCategoryFilter('All');
         setScanStatus('result');
       } else {
-        alert("Error: Cannot connect to Electron backend. Ensure you are running the app via 'npm run dev', not directly in a browser.");
+        alert("Cannot connect to backend API. Ensure CleanSweep is running via Electron.");
         setScanStatus('idle');
       }
-    } catch (error) {
-      console.error("Scan failed:", error);
-      alert(error.message || "Scan failed.");
+    } catch (err) {
+      console.error('Scan error:', err);
+      alert(err.message || 'Scan failed.');
       setScanStatus('idle');
     }
   };
 
-  const toggleItem = (id) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleCategory = (itemsInCategory) => {
-    const allSelected = itemsInCategory.every(i => selectedIds.has(i.id));
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      itemsInCategory.forEach(i => {
-        if (allSelected) next.delete(i.id);
-        else next.add(i.id);
-      });
-      return next;
-    });
-  };
-
-  const selectedItems = scanData ? scanData.items.filter(i => selectedIds.has(i.id)) : [];
-  const selectedBytes = selectedItems.reduce((sum, item) => sum + item.sizeBytes, 0);
-  const selectedFormatted = formatBytes(selectedBytes);
-
-  const categories = ['System & App Junk', 'Developer & Build', 'Package Managers', 'Containers & IDEs'];
-  const availableCategories = scanData
-    ? categories.filter(cat => scanData.items.some(i => i.category === cat))
-    : [];
-
-  const handleClean = async () => {
-    if (selectedItems.length === 0) return;
+  const handleExecuteClean = async (selectedItems, options) => {
     setScanStatus('cleaning');
     try {
-      if (window.electronAPI) {
-        const res = await window.electronAPI.cleanSystem(selectedItems);
+      if (window.cleanSweepAPI?.cleanSystem) {
+        const res = await window.cleanSweepAPI.cleanSystem(selectedItems, options);
         setCleanResult(res);
-      } else {
-        await new Promise(r => setTimeout(r, 2000));
-        setCleanResult({ success: true, cleanedCount: selectedItems.length, skippedCount: 0 });
+        setScanStatus('done');
+        fetchMetrics();
       }
-      setScanStatus('done');
-    } catch (error) {
-      console.error("Clean failed:", error);
+    } catch (err) {
+      console.error('Clean error:', err);
       setScanStatus('result');
     }
   };
 
-  const reset = () => {
-    setScanData(null);
-    setCleanResult(null);
-    setSelectedIds(new Set());
-    setCategoryFilter('All');
+  const handleResetScan = () => {
     setScanStatus('idle');
+    setScanData(null);
+    setScanProgress(null);
+    setCleanResult(null);
+  };
+
+  const handleRunQuickOptimize = async (taskId) => {
+    setOptimizing(true);
+    try {
+      if (window.cleanSweepAPI?.runOptimization) {
+        await window.cleanSweepAPI.runOptimization(taskId);
+        fetchMetrics();
+      }
+    } catch (err) {
+      console.error('Quick optimization error:', err);
+    } finally {
+      setOptimizing(false);
+    }
   };
 
   return (
-    <>
-      <div className="titlebar"></div>
-      <div className="sidebar">
-        <div className="sidebar-nav">
-          <div className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
-            <Monitor /> Dashboard
-          </div>
-          <div className={`nav-item ${activeTab === 'system' ? 'active' : ''}`} onClick={() => setActiveTab('system')}>
-            <HardDrive /> System Junk
-          </div>
-          <div className={`nav-item ${activeTab === 'trash' ? 'active' : ''}`} onClick={() => setActiveTab('trash')}>
-            <Trash2 /> Trash Bins
-          </div>
-          <div className="nav-item" style={{ opacity: 0.5 }}>
-            <Activity /> Activity Monitor
-          </div>
-          <div className="nav-item" style={{ opacity: 0.5, marginTop: 'auto' }}>
-            <Settings /> Preferences
-          </div>
-        </div>
+    <div className="app-layout">
+      {/* Draggable Titlebar Region for macOS Window Traffic Lights */}
+      <div className="titlebar">
+        <span className="titlebar-title">CleanSweep</span>
       </div>
 
-      <div className="content">
-        <div className="header">
-          <h1>Mac Cleaner</h1>
-          <p>Optimize and free up storage space</p>
+      {/* macOS Sidebar Navigation */}
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <div className="sidebar-logo">
+            <Sparkles size={18} className="text-accent" />
+          </div>
+          <div className="brand-text">
+            <strong>CleanSweep</strong>
+            <span className="brand-sub">macOS Optimizer</span>
+          </div>
         </div>
 
-        <div className="main-area">
-          {scanStatus === 'idle' && (
-            <div className="empty-state">
-              <Monitor className="empty-state-icon" strokeWidth={1.5} />
-              <h2>System Check Required</h2>
-              <p>Your system has not been scanned recently. We recommend running a full scan to identify unneeded files and reclaim disk space.</p>
-              <button className="btn btn-primary" onClick={handleScan}>
-                Scan Now
-              </button>
-            </div>
-          )}
+        <nav className="sidebar-nav">
+          <div 
+            className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            <Monitor size={16} />
+            <span>Overview</span>
+          </div>
 
-          {scanStatus === 'scanning' && (
-            <div className="loading-state">
-              <div className="loader"></div>
-              <p>Analyzing system and developer storage directories...</p>
-            </div>
-          )}
+          <div 
+            className={`nav-item ${activeTab === 'smart-clean' ? 'active' : ''}`}
+            onClick={() => setActiveTab('smart-clean')}
+          >
+            <Sparkles size={16} />
+            <span>Smart Clean</span>
+            {scanData && scanStatus === 'result' && (
+              <span className="nav-badge">{scanData.totalFormatted}</span>
+            )}
+          </div>
 
-          {scanStatus === 'result' && scanData && (
-            <div>
-              <div className="summary-card">
-                <div className="summary-stat">
-                  <span className="summary-label">Selected to Clean</span>
-                  <span className="summary-value">{selectedFormatted}</span>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                    {selectedItems.length} of {scanData.items.length} items selected (Total detected: {scanData.totalFormatted})
-                  </span>
-                </div>
-                <div>
-                  <button className="btn" onClick={reset} style={{ marginRight: '0.5rem' }}>Cancel</button>
-                  <button className="btn btn-danger" disabled={selectedItems.length === 0} onClick={handleClean}>
-                    Clean Selected ({selectedFormatted})
-                  </button>
-                </div>
-              </div>
+          <div 
+            className={`nav-item ${activeTab === 'uninstaller' ? 'active' : ''}`}
+            onClick={() => setActiveTab('uninstaller')}
+          >
+            <Trash2 size={16} />
+            <span>App Uninstaller</span>
+          </div>
 
-              <div className="category-tabs">
-                <button
-                  className={`category-tab ${categoryFilter === 'All' ? 'active' : ''}`}
-                  onClick={() => setCategoryFilter('All')}
-                >
-                  All Categories
-                  <span className="category-tab-count">{scanData.items.length}</span>
-                </button>
-                {availableCategories.map(cat => {
-                  const catItems = scanData.items.filter(i => i.category === cat);
-                  return (
-                    <button
-                      key={cat}
-                      className={`category-tab ${categoryFilter === cat ? 'active' : ''}`}
-                      onClick={() => setCategoryFilter(cat)}
-                    >
-                      {cat}
-                      <span className="category-tab-count">{catItems.length}</span>
-                    </button>
-                  );
-                })}
-              </div>
+          <div 
+            className={`nav-item ${activeTab === 'purger' ? 'active' : ''}`}
+            onClick={() => setActiveTab('purger')}
+          >
+            <FolderArchive size={16} />
+            <span>Project Artifacts</span>
+          </div>
 
-              {availableCategories
-                .filter(cat => categoryFilter === 'All' || categoryFilter === cat)
-                .map(cat => {
-                  const catItems = scanData.items.filter(i => i.category === cat);
-                  const catBytes = catItems.reduce((sum, i) => sum + i.sizeBytes, 0);
-                  const allSelected = catItems.length > 0 && catItems.every(i => selectedIds.has(i.id));
+          <div 
+            className={`nav-item ${activeTab === 'duplicates' ? 'active' : ''}`}
+            onClick={() => setActiveTab('duplicates')}
+          >
+            <Copy size={16} />
+            <span>Duplicate Finder</span>
+          </div>
 
-                  return (
-                    <div key={cat} style={{ marginBottom: '1.5rem' }}>
-                      <div className="category-header">
-                        <div className="category-header-left">
-                          <input
-                            type="checkbox"
-                            className="item-checkbox"
-                            checked={allSelected}
-                            onChange={() => toggleCategory(catItems)}
-                          />
-                          <span>{cat}</span>
-                          <span className="category-tab-count" style={{ background: 'rgba(128,128,128,0.2)' }}>{catItems.length}</span>
-                        </div>
-                        <div className="category-header-right">
-                          {formatBytes(catBytes)}
-                        </div>
-                      </div>
+          <div 
+            className={`nav-item ${activeTab === 'large-files' ? 'active' : ''}`}
+            onClick={() => setActiveTab('large-files')}
+          >
+            <Files size={16} />
+            <span>Large &amp; Old Files</span>
+          </div>
 
-                      <table className="results-table" style={{ marginBottom: '0.5rem' }}>
-                        <tbody>
-                          {catItems.map(item => (
-                            <tr key={item.id} className="item-row" onClick={() => toggleItem(item.id)} style={{ cursor: 'pointer' }}>
-                              <td style={{ width: '36px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                                <input
-                                  type="checkbox"
-                                  className="item-checkbox"
-                                  checked={selectedIds.has(item.id)}
-                                  onChange={() => toggleItem(item.id)}
-                                />
-                              </td>
-                              <td>
-                                <div>
-                                  <span className="item-name" style={{ display: 'inline-block' }}>{item.name}</span>
-                                  {!item.defaultChecked && (
-                                    <span className="item-badge-optional">Optional</span>
-                                  )}
-                                </div>
-                                <div className="item-desc">{item.description}</div>
-                                <div className="item-path">{item.path}</div>
-                              </td>
-                              <td className="item-size">{item.sizeFormatted}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  );
-                })}
-            </div>
-          )}
+          <div 
+            className={`nav-item ${activeTab === 'optimizer' ? 'active' : ''}`}
+            onClick={() => setActiveTab('optimizer')}
+          >
+            <Zap size={16} />
+            <span>Maintenance</span>
+          </div>
 
-          {scanStatus === 'cleaning' && (
-            <div className="loading-state">
-              <div className="loader" style={{ borderTopColor: 'var(--danger-color)' }}></div>
-              <p>Cleaning selected system and developer cache files...</p>
-            </div>
-          )}
+          <div 
+            className={`nav-item ${activeTab === 'startup' ? 'active' : ''}`}
+            onClick={() => setActiveTab('startup')}
+          >
+            <Rocket size={16} />
+            <span>Startup Items</span>
+          </div>
 
-          {scanStatus === 'done' && (
-            <div className="empty-state">
-              <CheckCircle2 className="empty-state-icon" style={{ color: '#34c759' }} strokeWidth={1.5} />
-              <h2>Optimization Complete</h2>
-              <p>Successfully recovered <strong>{selectedFormatted}</strong> of disk space. Your system should be running more efficiently now.</p>
-              {cleanResult?.skippedCount > 0 && (
-                <div style={{
-                  margin: '16px auto',
-                  maxWidth: '520px',
-                  padding: '12px 16px',
-                  background: 'var(--surface-bg-alt)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '10px',
-                  fontSize: '13px',
-                  color: 'var(--text-secondary)',
-                  textAlign: 'left',
-                  lineHeight: '1.4'
-                }}>
-                  <strong>ℹ️ Note on macOS Protections:</strong> {cleanResult.skippedCount} file(s) or system caches (such as Apple CloudKit, Safari, or active application logs) were skipped. To clean Apple-protected caches and the Trash bin, grant <strong>Full Disk Access</strong> in <em>System Settings &gt; Privacy &amp; Security &gt; Full Disk Access</em>.
-                </div>
-              )}
-              <button className="btn" onClick={reset}>
-                Return to Dashboard
-              </button>
-            </div>
-          )}
+          <div 
+            className={`nav-item ${activeTab === 'activity' ? 'active' : ''}`}
+            onClick={() => setActiveTab('activity')}
+          >
+            <Activity size={16} />
+            <span>Activity Monitor</span>
+          </div>
+        </nav>
 
+        {/* Sidebar Footer with Telemetry Privacy Indicator */}
+        <div className="sidebar-footer">
+          <div className="privacy-pill">
+            <ShieldCheck size={14} className="text-success" />
+            <span>Zero Telemetry</span>
+          </div>
+          <span className="version-caption">v1.0.0 Production</span>
         </div>
-      </div>
-    </>
-  )
+      </aside>
+
+      {/* Main Content Pane */}
+      <main className="content">
+        <header className="content-header">
+          <div className="header-titles">
+            <h1>
+              {activeTab === 'dashboard' && 'Dashboard Overview'}
+              {activeTab === 'smart-clean' && 'Smart System & Developer Clean'}
+              {activeTab === 'uninstaller' && 'App Uninstaller & Orphan Finder'}
+              {activeTab === 'purger' && 'Developer Project Artifacts Purger'}
+              {activeTab === 'duplicates' && 'Cryptographic Duplicate Finder'}
+              {activeTab === 'large-files' && 'Large & Old Files Explorer'}
+              {activeTab === 'optimizer' && 'System Maintenance & Optimization'}
+              {activeTab === 'startup' && 'Startup & Background Launch Items'}
+              {activeTab === 'activity' && 'Real-Time Activity Monitor'}
+            </h1>
+            <p>
+              {activeTab === 'dashboard' && 'Monitor health and clean system junk with zero telemetry'}
+              {activeTab === 'smart-clean' && 'Reclaim gigabytes from caches, logs, browsers, developer and AI models'}
+              {activeTab === 'uninstaller' && 'Completely uninstall apps and track down hidden leftover files'}
+              {activeTab === 'purger' && 'Reclaim gigabytes of rebuildable node_modules, target, and virtualenvs across your code repositories'}
+              {activeTab === 'duplicates' && 'Find and remove identical duplicate files using high-speed SHA-256 matching'}
+              {activeTab === 'large-files' && 'Surface and manage multi-gigabyte or aged files across your drive'}
+              {activeTab === 'optimizer' && 'Flush DNS, purge RAM, rebuild services, and fix macOS performance issues'}
+              {activeTab === 'startup' && 'Manage background LaunchAgents and daemons to boost boot speed'}
+              {activeTab === 'activity' && 'Live CPU, memory pressure, disk I/O and battery telemetry'}
+            </p>
+          </div>
+        </header>
+
+        <div className="main-scroll-body">
+          {activeTab === 'dashboard' && (
+            <Dashboard 
+              metrics={metrics} 
+              onStartScan={handleStartScan}
+              onNavigateTab={(tab) => setActiveTab(tab)}
+              onRunQuickOptimize={handleRunQuickOptimize}
+              optimizing={optimizing}
+              refreshMetrics={fetchMetrics}
+            />
+          )}
+
+          {activeTab === 'smart-clean' && (
+            <SmartClean 
+              scanStatus={scanStatus}
+              scanData={scanData}
+              scanProgress={scanProgress}
+              onStartScan={handleStartScan}
+              onClean={handleExecuteClean}
+              cleanResult={cleanResult}
+              onReset={handleResetScan}
+            />
+          )}
+
+          {activeTab === 'uninstaller' && (
+            <AppUninstaller />
+          )}
+
+          {activeTab === 'purger' && (
+            <ProjectPurger />
+          )}
+
+          {activeTab === 'duplicates' && (
+            <DuplicateFinder />
+          )}
+
+          {activeTab === 'large-files' && (
+            <LargeFiles />
+          )}
+
+          {activeTab === 'optimizer' && (
+            <Optimizer />
+          )}
+
+          {activeTab === 'startup' && (
+            <StartupItems />
+          )}
+
+          {activeTab === 'activity' && (
+            <ActivityMonitor 
+              metrics={metrics} 
+              refreshMetrics={fetchMetrics} 
+            />
+          )}
+        </div>
+      </main>
+    </div>
+  );
 }
-
-export default App
-
