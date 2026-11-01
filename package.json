@@ -1,20 +1,31 @@
 {
-  "name": "mac-cleaner",
-  "private": true,
-  "version": "0.0.0",
+  "name": "cleansweep",
+  "version": "1.0.0",
+  "description": "Fast, zero-telemetry macOS optimizer, app uninstaller, and disk cleaning suite with CLI companion.",
+  "author": "Vishnu <thecodekaizen>",
+  "license": "MIT",
   "main": "dist-electron/main.js",
+  "bin": {
+    "sweep": "./bin/sweep.mjs"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build && electron-builder",
+    "build:ui": "vite build",
     "lint": "oxlint",
+    "cli": "node bin/sweep.mjs",
     "preview": "vite preview"
   },
   "build": {
-    "appId": "com.maccleaner.app",
-    "productName": "Mac Cleaner",
+    "appId": "com.thecodekaizen.cleansweep",
+    "productName": "CleanSweep",
+    "electronDist": "node_modules/electron/dist",
     "mac": {
       "category": "public.app-category.utilities",
-      "target": ["dmg", "zip"]
+      "target": [
+        "zip",
+        "dir"
+      ]
     },
     "directories": {
       "output": "dist-electron/release"
